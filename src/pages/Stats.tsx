@@ -1,290 +1,341 @@
 import { useState, useMemo } from "react";
-import { TrendingUp, Activity, Target, Calendar } from "lucide-react";
-import { BottomNav } from "@/components/BottomNav";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
+import { Flame, Target, TrendingUp, Pill } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 type Period = "week" | "month" | "year";
 
 interface DayData {
   pushups: number;
   abs: number;
-  footing: boolean;
-  bikeComplete: boolean;
-  supplements: Record<string, boolean>;
+  supplements?: {
+    codLiverOil: boolean;
+    pumpkinOil: boolean;
+    garlicCapsule: boolean;
+    antioxidantTea: boolean;
+  };
+  customSupplements?: { id: string; name: string; checked: boolean }[];
 }
+
+interface SupplementStat {
+  id: string;
+  name: string;
+  emoji: string;
+  daysTaken: number;
+  totalDays: number;
+  percentage: number;
+}
+
+const defaultSupplements = [
+  { id: "codLiverOil", name: "Huile de foie de morue", emoji: "🐟" },
+  { id: "pumpkinOil", name: "Huile de courge", emoji: "🎃" },
+  { id: "garlicCapsule", name: "Gélule d'ail", emoji: "🧄" },
+  { id: "antioxidantTea", name: "Tisane antioxydante", emoji: "🍵" },
+];
 
 const Stats = () => {
   const [period, setPeriod] = useState<Period>("week");
 
-  const getDateRange = (period: Period): Date[] => {
+  const getDateRange = (p: Period): Date[] => {
     const dates: Date[] = [];
     const today = new Date();
-    const days = period === "week" ? 7 : period === "month" ? 30 : 365;
+    const days = p === "week" ? 7 : p === "month" ? 30 : 365;
     
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
-      date.setDate(date.getDate() - i);
+      date.setDate(today.getDate() - i);
       dates.push(date);
     }
     return dates;
   };
 
   const getDayData = (date: Date): DayData | null => {
-    const key = `longevity-${date.toDateString()}`;
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return null;
+    const key = `longevity-${date.toISOString().split('T')[0]}`;
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
   };
 
   const stats = useMemo(() => {
     const dates = getDateRange(period);
-    const dailyData = dates.map(date => ({
-      date,
-      data: getDayData(date)
-    }));
-
-    // Calculate totals
     let totalPushups = 0;
     let totalAbs = 0;
-    let daysWithData = 0;
     let completedDays = 0;
+    let currentStreak = 0;
+    let tempStreak = 0;
 
-    dailyData.forEach(({ data }) => {
-      if (data) {
-        daysWithData++;
-        totalPushups += data.pushups || 0;
-        totalAbs += data.abs || 0;
+    // Supplements tracking
+    const supplementCounts: Record<string, number> = {};
+    const customSupplementCounts: Record<string, { name: string; count: number }> = {};
+
+    dates.forEach((date, index) => {
+      const dayData = getDayData(date);
+      if (dayData) {
+        totalPushups += dayData.pushups || 0;
+        totalAbs += dayData.abs || 0;
         
-        // Check if day was "complete" (goals met)
-        const pushupsComplete = (data.pushups || 0) >= 200;
-        const absComplete = (data.abs || 0) >= 100;
-        if (pushupsComplete && absComplete) {
+        const hasActivity = (dayData.pushups || 0) > 0 || (dayData.abs || 0) > 0;
+        if (hasActivity) {
           completedDays++;
+          tempStreak++;
+          if (index === dates.length - 1 || index === dates.length - 2) {
+            currentStreak = Math.max(currentStreak, tempStreak);
+          }
+        } else {
+          tempStreak = 0;
+        }
+
+        // Count supplements
+        if (dayData.supplements) {
+          defaultSupplements.forEach(supp => {
+            if (dayData.supplements?.[supp.id as keyof typeof dayData.supplements]) {
+              supplementCounts[supp.id] = (supplementCounts[supp.id] || 0) + 1;
+            }
+          });
+        }
+
+        // Count custom supplements
+        if (dayData.customSupplements) {
+          dayData.customSupplements.forEach(cs => {
+            if (cs.checked) {
+              if (!customSupplementCounts[cs.id]) {
+                customSupplementCounts[cs.id] = { name: cs.name, count: 0 };
+              }
+              customSupplementCounts[cs.id].count++;
+            }
+          });
         }
       }
     });
 
-    // Calculate streak (consecutive days from today going back)
-    let streak = 0;
-    for (let i = dailyData.length - 1; i >= 0; i--) {
-      const { data } = dailyData[i];
-      if (data && (data.pushups || 0) >= 200 && (data.abs || 0) >= 100) {
-        streak++;
-      } else if (i < dailyData.length - 1) {
-        // Allow today to be incomplete, but break on past incomplete days
-        break;
-      }
-    }
+    const totalDays = dates.length;
 
-    // Average completion
-    const avgCompletion = daysWithData > 0 ? Math.round((completedDays / daysWithData) * 100) : 0;
+    // Build supplements stats
+    const supplementsStats: SupplementStat[] = defaultSupplements.map(supp => ({
+      id: supp.id,
+      name: supp.name,
+      emoji: supp.emoji,
+      daysTaken: supplementCounts[supp.id] || 0,
+      totalDays,
+      percentage: Math.round(((supplementCounts[supp.id] || 0) / totalDays) * 100),
+    }));
 
-    // Aggregate data for charts based on period
-    let chartData: { label: string; pushups: number; abs: number }[] = [];
-
-    if (period === "week") {
-      const dayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-      chartData = dailyData.map(({ date, data }) => ({
-        label: dayLabels[date.getDay() === 0 ? 6 : date.getDay() - 1],
-        pushups: data?.pushups || 0,
-        abs: data?.abs || 0,
-      }));
-    } else if (period === "month") {
-      // Aggregate by week (4-5 weeks)
-      const weeks: { pushups: number; abs: number; count: number }[] = [];
-      dailyData.forEach(({ data }, index) => {
-        const weekIndex = Math.floor(index / 7);
-        if (!weeks[weekIndex]) {
-          weeks[weekIndex] = { pushups: 0, abs: 0, count: 0 };
-        }
-        weeks[weekIndex].pushups += data?.pushups || 0;
-        weeks[weekIndex].abs += data?.abs || 0;
-        weeks[weekIndex].count++;
+    // Add custom supplements
+    Object.entries(customSupplementCounts).forEach(([id, data]) => {
+      supplementsStats.push({
+        id,
+        name: data.name,
+        emoji: "💊",
+        daysTaken: data.count,
+        totalDays,
+        percentage: Math.round((data.count / totalDays) * 100),
       });
-      chartData = weeks.map((week, i) => ({
-        label: `Sem ${i + 1}`,
-        pushups: week.pushups,
-        abs: week.abs,
-      }));
-    } else {
-      // Aggregate by month (12 months)
-      const months: Map<string, { pushups: number; abs: number }> = new Map();
-      const monthLabels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-      
-      dailyData.forEach(({ date, data }) => {
-        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-        const existing = months.get(monthKey) || { pushups: 0, abs: 0 };
-        months.set(monthKey, {
-          pushups: existing.pushups + (data?.pushups || 0),
-          abs: existing.abs + (data?.abs || 0),
-        });
-      });
+    });
 
-      // Get last 12 months in order
-      const today = new Date();
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${d.getMonth()}`;
-        const monthData = months.get(key) || { pushups: 0, abs: 0 };
-        chartData.push({
-          label: monthLabels[d.getMonth()],
-          ...monthData,
-        });
-      }
-    }
-
-    // Calculate max values for chart scaling
-    const maxPushups = Math.max(...chartData.map(d => d.pushups), 1);
-    const maxAbs = Math.max(...chartData.map(d => d.abs), 1);
-
-    // Goals based on period
-    const pushupsGoal = period === "week" ? 200 : period === "month" ? 200 * 30 : 200 * 365;
-    const absGoal = period === "week" ? 100 : period === "month" ? 100 * 30 : 100 * 365;
+    const avgSupplementRegularity = supplementsStats.length > 0
+      ? Math.round(supplementsStats.reduce((acc, s) => acc + s.percentage, 0) / supplementsStats.length)
+      : 0;
 
     return {
-      chartData,
-      maxPushups,
-      maxAbs,
       totalPushups,
       totalAbs,
-      streak,
-      avgCompletion,
-      pushupsGoal,
-      absGoal,
+      streak: currentStreak,
+      avgCompletion: Math.round((completedDays / totalDays) * 100),
+      totalDays,
+      supplementsStats,
+      avgSupplementRegularity,
     };
   }, [period]);
 
-  const periodLabels = {
-    week: "cette semaine",
-    month: "ce mois",
-    year: "cette année",
+  const chartData = useMemo(() => {
+    const dates = getDateRange(period);
+    
+    if (period === "week") {
+      const dayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+      return dates.map((date, i) => {
+        const dayData = getDayData(date);
+        return {
+          name: dayLabels[date.getDay() === 0 ? 6 : date.getDay() - 1],
+          pushups: dayData?.pushups || 0,
+          abs: dayData?.abs || 0,
+        };
+      });
+    } else if (period === "month") {
+      const weeks: { pushups: number; abs: number }[] = [
+        { pushups: 0, abs: 0 },
+        { pushups: 0, abs: 0 },
+        { pushups: 0, abs: 0 },
+        { pushups: 0, abs: 0 },
+        { pushups: 0, abs: 0 },
+      ];
+      dates.forEach((date, i) => {
+        const weekIndex = Math.floor(i / 7);
+        const dayData = getDayData(date);
+        if (dayData && weekIndex < 5) {
+          weeks[weekIndex].pushups += dayData.pushups || 0;
+          weeks[weekIndex].abs += dayData.abs || 0;
+        }
+      });
+      return weeks.slice(0, 4).map((w, i) => ({
+        name: `Sem ${i + 1}`,
+        pushups: w.pushups,
+        abs: w.abs,
+      }));
+    } else {
+      const months: { pushups: number; abs: number }[] = Array(12).fill(null).map(() => ({ pushups: 0, abs: 0 }));
+      dates.forEach(date => {
+        const monthIndex = date.getMonth();
+        const dayData = getDayData(date);
+        if (dayData) {
+          months[monthIndex].pushups += dayData.pushups || 0;
+          months[monthIndex].abs += dayData.abs || 0;
+        }
+      });
+      const monthLabels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+      return months.map((m, i) => ({
+        name: monthLabels[i],
+        pushups: m.pushups,
+        abs: m.abs,
+      }));
+    }
+  }, [period]);
+
+  const periodLabel = period === "week" ? "cette semaine" : period === "month" ? "ce mois" : "cette année";
+  const goalMultiplier = period === "week" ? 1 : period === "month" ? 4 : 52;
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage >= 80) return "bg-emerald-500";
+    if (percentage >= 50) return "bg-yellow-500";
+    return "bg-red-400";
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-30 glass-card border-b border-border/50 px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gradient-emerald">Statistiques</h1>
-          <p className="text-xs text-muted-foreground">Votre progression {periodLabels[period]}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 pb-24">
+      <div className="max-w-md mx-auto space-y-6">
+        <div className="text-center pt-4">
+          <h1 className="text-2xl font-bold text-white">Statistiques</h1>
+          <p className="text-slate-400 text-sm">Votre progression</p>
         </div>
-      </header>
 
-      <main className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* Period Selector */}
         <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 glass-card">
-            <TabsTrigger value="week" className="flex items-center gap-1.5 text-xs">
-              <Calendar className="h-3 w-3" />
+          <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-slate-700">
+            <TabsTrigger value="week" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
               Semaine
             </TabsTrigger>
-            <TabsTrigger value="month" className="flex items-center gap-1.5 text-xs">
-              <Calendar className="h-3 w-3" />
+            <TabsTrigger value="month" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
               Mois
             </TabsTrigger>
-            <TabsTrigger value="year" className="flex items-center gap-1.5 text-xs">
-              <Calendar className="h-3 w-3" />
+            <TabsTrigger value="year" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
               Année
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="glass-card rounded-2xl p-4 animate-slide-up">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Série actuelle</span>
-            </div>
-            <p className="text-3xl font-bold text-foreground">{stats.streak}</p>
-            <p className="text-xs text-muted-foreground">jours consécutifs</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="glass-card p-4 text-center">
+            <Flame className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{stats.streak}</p>
+            <p className="text-xs text-slate-400">Jours de série</p>
           </div>
-
-          <div className="glass-card rounded-2xl p-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Complétion</span>
-            </div>
-            <p className="text-3xl font-bold text-foreground">{stats.avgCompletion}%</p>
-            <p className="text-xs text-muted-foreground">moyenne {periodLabels[period]}</p>
+          <div className="glass-card p-4 text-center">
+            <Target className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{stats.avgCompletion}%</p>
+            <p className="text-xs text-slate-400">Complétion</p>
           </div>
         </div>
 
-        {/* Push-ups Chart */}
-        <section className="glass-card rounded-2xl p-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Pompes {periodLabels[period]}</h2>
+        {/* Pushups Chart */}
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium">💪 Pompes</h3>
+            <span className="text-emerald-400 text-sm">{periodLabel}</span>
           </div>
-          <div className="flex items-end justify-between gap-1 h-32">
-            {stats.chartData.map((item, i) => {
-              const height = (item.pushups / stats.maxPushups) * 100;
-              const isLast = i === stats.chartData.length - 1;
-              const goalPerBar = period === "week" ? 200 : period === "month" ? 200 * 7 : stats.pushupsGoal / 12;
-              const isComplete = item.pushups >= goalPerBar;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full relative flex-1 flex items-end">
-                    <div
-                      className={`w-full rounded-t-lg transition-all duration-500 ${
-                        isComplete ? "bg-primary glow-emerald" : "bg-secondary"
-                      } ${isLast && period === "week" ? "opacity-50" : ""}`}
-                      style={{ height: `${Math.max(height, 2)}%` }}
-                    />
-                  </div>
-                  <span className="text-[8px] text-muted-foreground truncate w-full text-center">{item.label}</span>
-                </div>
-              );
-            })}
+          <div className="h-32">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                <YAxis hide />
+                <Bar dataKey="pushups" radius={[4, 4, 0, 0]}>
+                  {chartData.map((_, index) => (
+                    <Cell key={index} fill="#10b981" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-            <span>Objectif: {period === "week" ? "200/jour" : period === "month" ? "6000/mois" : "73K/an"}</span>
-            <span className="text-primary">{stats.totalPushups.toLocaleString()} total</span>
+          <div className="flex justify-between text-xs text-slate-400 mt-2">
+            <span>Objectif: {50 * goalMultiplier}</span>
+            <span>Total: {stats.totalPushups}</span>
           </div>
-        </section>
+        </div>
 
         {/* Abs Chart */}
-        <section className="glass-card rounded-2xl p-4 animate-slide-up" style={{ animationDelay: "0.3s" }}>
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Abdos {periodLabels[period]}</h2>
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium">🔥 Abdos</h3>
+            <span className="text-emerald-400 text-sm">{periodLabel}</span>
           </div>
-          <div className="flex items-end justify-between gap-1 h-32">
-            {stats.chartData.map((item, i) => {
-              const height = (item.abs / stats.maxAbs) * 100;
-              const isLast = i === stats.chartData.length - 1;
-              const goalPerBar = period === "week" ? 100 : period === "month" ? 100 * 7 : stats.absGoal / 12;
-              const isComplete = item.abs >= goalPerBar;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full relative flex-1 flex items-end">
+          <div className="h-32">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                <YAxis hide />
+                <Bar dataKey="abs" radius={[4, 4, 0, 0]}>
+                  {chartData.map((_, index) => (
+                    <Cell key={index} fill="#f97316" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-between text-xs text-slate-400 mt-2">
+            <span>Objectif: {30 * goalMultiplier}</span>
+            <span>Total: {stats.totalAbs}</span>
+          </div>
+        </div>
+
+        {/* Supplements Tracking Table */}
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Pill className="w-5 h-5 text-purple-400" />
+              <h3 className="text-white font-medium">Suppléments</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <span className="text-emerald-400 text-sm font-medium">{stats.avgSupplementRegularity}%</span>
+            </div>
+          </div>
+
+          {stats.supplementsStats.length > 0 ? (
+            <div className="space-y-3">
+              {stats.supplementsStats.map((supp) => (
+                <div key={supp.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">
+                      {supp.emoji} {supp.name}
+                    </span>
+                    <span className="text-slate-400">
+                      {supp.daysTaken}/{supp.totalDays}
+                      {supp.percentage === 100 && " ⭐"}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div
-                      className={`w-full rounded-t-lg transition-all duration-500 ${
-                        isComplete ? "bg-primary glow-emerald" : "bg-secondary"
-                      } ${isLast && period === "week" ? "opacity-50" : ""}`}
-                      style={{ height: `${Math.max(height, 2)}%` }}
+                      className={`h-full rounded-full transition-all ${getProgressColor(supp.percentage)}`}
+                      style={{ width: `${supp.percentage}%` }}
                     />
                   </div>
-                  <span className="text-[8px] text-muted-foreground truncate w-full text-center">{item.label}</span>
                 </div>
-              );
-            })}
-          </div>
-          <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-            <span>Objectif: {period === "week" ? "100/jour" : period === "month" ? "3000/mois" : "36K/an"}</span>
-            <span className="text-primary">{stats.totalAbs.toLocaleString()} total</span>
-          </div>
-        </section>
-
-        {/* Info */}
-        <p className="text-center text-xs text-muted-foreground">
-          Les statistiques se mettent à jour automatiquement
-        </p>
-      </main>
-
-      <BottomNav />
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-400 text-sm text-center py-4">
+              Aucune donnée de suppléments pour {periodLabel}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
