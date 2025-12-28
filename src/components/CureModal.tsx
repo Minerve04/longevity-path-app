@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Leaf, Pill, Flower2, Brain, Heart, Circle, Plus, X, Check, Trash2 } from "lucide-react";
+import { Sparkles, Leaf, Pill, Flower2, Brain, Heart, Circle, Plus, X, Check, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Cure, DEFAULT_CURES, loadCustomCures, saveCustomCures, getAllCures } from "@/lib/cures";
+import { Cure, DEFAULT_CURES, loadCustomCures, saveCustomCures } from "@/lib/cures";
 import { AddCureModal } from "./AddCureModal";
 
 const getIconComponent = (icon: Cure["icon"]) => {
@@ -40,6 +40,7 @@ interface CureModalProps {
 export const CureModal = ({ activeCure, onActivate, onDeactivate }: CureModalProps) => {
   const [open, setOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingCure, setEditingCure] = useState<Cure | null>(null);
   const [customCures, setCustomCures] = useState<Cure[]>([]);
 
   useEffect(() => {
@@ -57,6 +58,23 @@ export const CureModal = ({ activeCure, onActivate, onDeactivate }: CureModalPro
     const updated = [...customCures, cure];
     setCustomCures(updated);
     saveCustomCures(updated);
+  };
+
+  const handleEditCure = (cure: Cure) => {
+    const updated = customCures.map((c) => (c.id === cure.id ? cure : c));
+    setCustomCures(updated);
+    saveCustomCures(updated);
+    setEditingCure(null);
+  };
+
+  const handleOpenEdit = (cure: Cure) => {
+    setEditingCure(cure);
+    setAddModalOpen(true);
+  };
+
+  const handleCloseAddModal = (open: boolean) => {
+    setAddModalOpen(open);
+    if (!open) setEditingCure(null);
   };
 
   const handleDeleteCure = (cureId: string) => {
@@ -172,14 +190,24 @@ export const CureModal = ({ activeCure, onActivate, onDeactivate }: CureModalPro
                           Activer
                         </Button>
                         {cure.isCustom && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteCure(cure.id)}
-                            className="border-destructive/50 text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenEdit(cure)}
+                              className="border-primary/50 text-primary hover:bg-primary/10"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteCure(cure.id)}
+                              className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                       </>
                     )}
@@ -193,8 +221,10 @@ export const CureModal = ({ activeCure, onActivate, onDeactivate }: CureModalPro
 
       <AddCureModal
         open={addModalOpen}
-        onOpenChange={setAddModalOpen}
+        onOpenChange={handleCloseAddModal}
         onAdd={handleAddCure}
+        onEdit={handleEditCure}
+        editingCure={editingCure}
       />
     </>
   );
