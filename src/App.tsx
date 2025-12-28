@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import SplashScreen from "./components/SplashScreen";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -14,6 +16,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <TooltipProvider>
+        <SplashScreen />
+        <PWAInstallPrompt />
         <Toaster />
         <Sonner />
         <Routes>
