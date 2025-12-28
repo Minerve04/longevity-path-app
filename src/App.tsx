@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./components/SplashScreen";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import NotificationPermission from "./components/NotificationPermission";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ const App = () => (
     <BrowserRouter>
       <TooltipProvider>
         <SplashScreen />
+        <NotificationPermission />
         <PWAInstallPrompt />
         <Toaster />
         <Sonner />

@@ -13,6 +13,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  scheduleAllReminders,
+  cancelReminder,
+  getNotificationPermission,
+} from "@/lib/notifications";
 
 const STORAGE_KEY = "longevity-reminders";
 
@@ -44,6 +49,13 @@ export const ReminderManager = () => {
     }
   }, []);
 
+  // Schedule notifications when reminders change
+  useEffect(() => {
+    if (reminders.length > 0 && getNotificationPermission() === "granted") {
+      scheduleAllReminders(reminders);
+    }
+  }, [reminders]);
+
   // Save reminders to localStorage
   const saveReminders = (newReminders: Reminder[]) => {
     setReminders(newReminders);
@@ -69,6 +81,7 @@ export const ReminderManager = () => {
 
   const confirmDelete = () => {
     if (reminderToDelete) {
+      cancelReminder(reminderToDelete.id);
       const updated = reminders.filter((r) => r.id !== reminderToDelete.id);
       saveReminders(updated);
     }
