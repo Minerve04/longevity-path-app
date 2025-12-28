@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Dumbbell, Salad, Sparkles, Trash2 } from "lucide-react";
+import { Dumbbell, Salad, Sparkles, Trash2, Pencil } from "lucide-react";
 import { Counter } from "@/components/Counter";
 import { TimerCard } from "@/components/TimerCard";
 import { CheckItem } from "@/components/CheckItem";
 import { AddItemModal } from "@/components/AddItemModal";
+import { EditItemModal } from "@/components/EditItemModal";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { CureModal } from "@/components/CureModal";
 import { BottomNav } from "@/components/BottomNav";
@@ -50,6 +51,10 @@ const Dashboard = () => {
   const [activeCure, setActiveCure] = useState<string | null>(null);
   const [cureTasks, setCureTasks] = useState<CustomItem[]>([]);
   const [cureChecked, setCureChecked] = useState<DailyCheckedState>({});
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<{ id: string; label: string; type: "exercise" | "supplement" } | null>(null);
 
   // Load persistent custom items (once)
   useEffect(() => {
@@ -142,6 +147,12 @@ const Dashboard = () => {
     setExerciseChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const editCustomExercise = (id: string, newLabel: string) => {
+    setCustomExercises((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, label: newLabel } : item))
+    );
+  };
+
   const addCustomSupplement = (label: string) => {
     const newItem = { id: Date.now().toString(), label };
     setCustomSupplements((prev) => [...prev, newItem]);
@@ -157,6 +168,26 @@ const Dashboard = () => {
 
   const toggleCustomSupplement = (id: string) => {
     setSupplementChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const editCustomSupplement = (id: string, newLabel: string) => {
+    setCustomSupplements((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, label: newLabel } : item))
+    );
+  };
+
+  const openEditModal = (id: string, label: string, type: "exercise" | "supplement") => {
+    setEditingItem({ id, label, type });
+    setEditModalOpen(true);
+  };
+
+  const handleEditSave = (newLabel: string) => {
+    if (!editingItem) return;
+    if (editingItem.type === "exercise") {
+      editCustomExercise(editingItem.id, newLabel);
+    } else {
+      editCustomSupplement(editingItem.id, newLabel);
+    }
   };
 
   const handleActivateCure = (cureId: string, tasks: string[], duration: number) => {
@@ -281,7 +312,7 @@ const Dashboard = () => {
           />
 
           {customExercises.map((exercise) => (
-            <div key={exercise.id} className="flex items-center gap-2">
+            <div key={exercise.id} className="flex items-center gap-1">
               <div className="flex-1">
                 <CheckItem
                   label={exercise.label}
@@ -289,6 +320,14 @@ const Dashboard = () => {
                   onToggle={() => toggleCustomExercise(exercise.id)}
                 />
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0"
+                onClick={() => openEditModal(exercise.id, exercise.label, "exercise")}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -335,7 +374,7 @@ const Dashboard = () => {
           />
 
           {customSupplements.map((supplement) => (
-            <div key={supplement.id} className="flex items-center gap-2">
+            <div key={supplement.id} className="flex items-center gap-1">
               <div className="flex-1">
                 <CheckItem
                   label={supplement.label}
@@ -343,6 +382,14 @@ const Dashboard = () => {
                   onToggle={() => toggleCustomSupplement(supplement.id)}
                 />
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0"
+                onClick={() => openEditModal(supplement.id, supplement.label, "supplement")}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -359,6 +406,17 @@ const Dashboard = () => {
       </main>
 
       <BottomNav />
+
+      {/* Edit Modal */}
+      {editingItem && (
+        <EditItemModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          currentLabel={editingItem.label}
+          type={editingItem.type}
+          onSave={handleEditSave}
+        />
+      )}
     </div>
   );
 };
