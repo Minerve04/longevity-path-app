@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["hero-logo.jpg"],
+      includeAssets: ["icon-192.png", "icon-512.png"],
       manifest: {
         name: "Hero",
         short_name: "Hero",
@@ -27,14 +27,14 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         icons: [
           {
-            src: "/hero-logo.jpg",
+            src: "/icon-192.png",
             sizes: "192x192",
-            type: "image/jpeg",
+            type: "image/png",
           },
           {
-            src: "/hero-logo.jpg",
+            src: "/icon-512.png",
             sizes: "512x512",
-            type: "image/jpeg",
+            type: "image/png",
             purpose: "any maskable",
           },
         ],
