@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dumbbell, Salad, Sparkles } from "lucide-react";
+import { Dumbbell, Salad, Sparkles, Trash2 } from "lucide-react";
 import { Counter } from "@/components/Counter";
 import { TimerCard } from "@/components/TimerCard";
 import { CheckItem } from "@/components/CheckItem";
@@ -7,12 +7,21 @@ import { AddItemModal } from "@/components/AddItemModal";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { CureModal } from "@/components/CureModal";
 import { BottomNav } from "@/components/BottomNav";
+import { Button } from "@/components/ui/button";
 
 interface CustomItem {
   id: string;
   label: string;
-  checked: boolean;
 }
+
+interface DailyCheckedState {
+  [id: string]: boolean;
+}
+
+// Storage keys
+const CUSTOM_EXERCISES_KEY = "hero-custom-exercises";
+const CUSTOM_SUPPLEMENTS_KEY = "hero-custom-supplements";
+const getDailyKey = () => `longevity-${new Date().toDateString()}`;
 
 const Dashboard = () => {
   // Sport state
@@ -20,7 +29,14 @@ const Dashboard = () => {
   const [abs, setAbs] = useState(0);
   const [footing, setFooting] = useState(false);
   const [bikeComplete, setBikeComplete] = useState(false);
+  
+  // Persistent custom items (labels only)
   const [customExercises, setCustomExercises] = useState<CustomItem[]>([]);
+  const [customSupplements, setCustomSupplements] = useState<CustomItem[]>([]);
+  
+  // Daily checked states for custom items
+  const [exerciseChecked, setExerciseChecked] = useState<DailyCheckedState>({});
+  const [supplementChecked, setSupplementChecked] = useState<DailyCheckedState>({});
 
   // Nutrition state
   const [supplements, setSupplements] = useState({
@@ -29,79 +45,118 @@ const Dashboard = () => {
     garlicCapsule: false,
     antioxidantTea: false,
   });
-  const [customSupplements, setCustomSupplements] = useState<CustomItem[]>([]);
 
   // Cure state
   const [activeCure, setActiveCure] = useState<string | null>(null);
   const [cureTasks, setCureTasks] = useState<CustomItem[]>([]);
+  const [cureChecked, setCureChecked] = useState<DailyCheckedState>({});
 
-  // Load from localStorage
+  // Load persistent custom items (once)
   useEffect(() => {
-    const today = new Date().toDateString();
-    const saved = localStorage.getItem(`longevity-${today}`);
-    if (saved) {
-      const data = JSON.parse(saved);
-      setPushups(data.pushups || 0);
-      setAbs(data.abs || 0);
-      setFooting(data.footing || false);
-      setBikeComplete(data.bikeComplete || false);
-      setSupplements(data.supplements || supplements);
-      setCustomExercises(data.customExercises || []);
-      setCustomSupplements(data.customSupplements || []);
-      setActiveCure(data.activeCure || null);
-      setCureTasks(data.cureTasks || []);
+    const savedExercises = localStorage.getItem(CUSTOM_EXERCISES_KEY);
+    const savedSupplements = localStorage.getItem(CUSTOM_SUPPLEMENTS_KEY);
+    
+    if (savedExercises) {
+      try {
+        setCustomExercises(JSON.parse(savedExercises));
+      } catch {
+        setCustomExercises([]);
+      }
+    }
+    
+    if (savedSupplements) {
+      try {
+        setCustomSupplements(JSON.parse(savedSupplements));
+      } catch {
+        setCustomSupplements([]);
+      }
     }
   }, []);
 
-  // Save to localStorage
+  // Load daily progress
   useEffect(() => {
-    const today = new Date().toDateString();
+    const saved = localStorage.getItem(getDailyKey());
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setPushups(data.pushups || 0);
+        setAbs(data.abs || 0);
+        setFooting(data.footing || false);
+        setBikeComplete(data.bikeComplete || false);
+        setSupplements(data.supplements || supplements);
+        setExerciseChecked(data.exerciseChecked || {});
+        setSupplementChecked(data.supplementChecked || {});
+        setActiveCure(data.activeCure || null);
+        setCureTasks(data.cureTasks || []);
+        setCureChecked(data.cureChecked || {});
+      } catch {
+        // Keep defaults
+      }
+    }
+  }, []);
+
+  // Save daily progress
+  useEffect(() => {
     const data = {
       pushups,
       abs,
       footing,
       bikeComplete,
       supplements,
-      customExercises,
-      customSupplements,
+      exerciseChecked,
+      supplementChecked,
       activeCure,
       cureTasks,
+      cureChecked,
     };
-    localStorage.setItem(`longevity-${today}`, JSON.stringify(data));
-  }, [pushups, abs, footing, bikeComplete, supplements, customExercises, customSupplements, activeCure, cureTasks]);
+    localStorage.setItem(getDailyKey(), JSON.stringify(data));
+  }, [pushups, abs, footing, bikeComplete, supplements, exerciseChecked, supplementChecked, activeCure, cureTasks, cureChecked]);
+
+  // Save persistent custom items
+  useEffect(() => {
+    localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(customExercises));
+  }, [customExercises]);
+
+  useEffect(() => {
+    localStorage.setItem(CUSTOM_SUPPLEMENTS_KEY, JSON.stringify(customSupplements));
+  }, [customSupplements]);
 
   const toggleSupplement = (key: keyof typeof supplements) => {
     setSupplements((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const addCustomExercise = (label: string) => {
-    setCustomExercises((prev) => [
-      ...prev,
-      { id: Date.now().toString(), label, checked: false },
-    ]);
+    const newItem = { id: Date.now().toString(), label };
+    setCustomExercises((prev) => [...prev, newItem]);
+  };
+
+  const removeCustomExercise = (id: string) => {
+    setCustomExercises((prev) => prev.filter((item) => item.id !== id));
+    setExerciseChecked((prev) => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const toggleCustomExercise = (id: string) => {
-    setCustomExercises((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
+    setExerciseChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const addCustomSupplement = (label: string) => {
-    setCustomSupplements((prev) => [
-      ...prev,
-      { id: Date.now().toString(), label, checked: false },
-    ]);
+    const newItem = { id: Date.now().toString(), label };
+    setCustomSupplements((prev) => [...prev, newItem]);
+  };
+
+  const removeCustomSupplement = (id: string) => {
+    setCustomSupplements((prev) => prev.filter((item) => item.id !== id));
+    setSupplementChecked((prev) => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const toggleCustomSupplement = (id: string) => {
-    setCustomSupplements((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
+    setSupplementChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleActivateCure = (cureId: string, tasks: string[], duration: number) => {
@@ -110,22 +165,19 @@ const Dashboard = () => {
       tasks.map((label, i) => ({
         id: `cure-${i}`,
         label,
-        checked: false,
       }))
     );
+    setCureChecked({});
   };
 
   const handleDeactivateCure = () => {
     setActiveCure(null);
     setCureTasks([]);
+    setCureChecked({});
   };
 
   const toggleCureTask = (id: string) => {
-    setCureTasks((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
+    setCureChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   // Calculate progress
@@ -136,13 +188,13 @@ const Dashboard = () => {
     if (abs >= 100) completed++;
     if (footing) completed++;
     if (bikeComplete) completed++;
-    completed += customExercises.filter((e) => e.checked).length;
+    completed += customExercises.filter((e) => exerciseChecked[e.id]).length;
     return Math.round((completed / total) * 100);
   };
 
   const nutritionProgress = () => {
     const supplementsComplete = Object.values(supplements).filter(Boolean).length;
-    const customComplete = customSupplements.filter((s) => s.checked).length;
+    const customComplete = customSupplements.filter((s) => supplementChecked[s.id]).length;
     const total = 4 + customSupplements.length;
     return Math.round(((supplementsComplete + customComplete) / total) * 100);
   };
@@ -185,7 +237,7 @@ const Dashboard = () => {
                 <CheckItem
                   key={task.id}
                   label={task.label}
-                  checked={task.checked}
+                  checked={cureChecked[task.id] || false}
                   onToggle={() => toggleCureTask(task.id)}
                 />
               ))}
@@ -229,12 +281,23 @@ const Dashboard = () => {
           />
 
           {customExercises.map((exercise) => (
-            <CheckItem
-              key={exercise.id}
-              label={exercise.label}
-              checked={exercise.checked}
-              onToggle={() => toggleCustomExercise(exercise.id)}
-            />
+            <div key={exercise.id} className="flex items-center gap-2">
+              <div className="flex-1">
+                <CheckItem
+                  label={exercise.label}
+                  checked={exerciseChecked[exercise.id] || false}
+                  onToggle={() => toggleCustomExercise(exercise.id)}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+                onClick={() => removeCustomExercise(exercise.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           ))}
 
           <AddItemModal onAdd={addCustomExercise} type="exercise" />
@@ -272,12 +335,23 @@ const Dashboard = () => {
           />
 
           {customSupplements.map((supplement) => (
-            <CheckItem
-              key={supplement.id}
-              label={supplement.label}
-              checked={supplement.checked}
-              onToggle={() => toggleCustomSupplement(supplement.id)}
-            />
+            <div key={supplement.id} className="flex items-center gap-2">
+              <div className="flex-1">
+                <CheckItem
+                  label={supplement.label}
+                  checked={supplementChecked[supplement.id] || false}
+                  onToggle={() => toggleCustomSupplement(supplement.id)}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+                onClick={() => removeCustomSupplement(supplement.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           ))}
 
           <AddItemModal onAdd={addCustomSupplement} type="supplement" />
