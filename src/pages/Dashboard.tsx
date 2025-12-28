@@ -24,6 +24,7 @@ import { SortableItem } from "@/components/SortableItem";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { CureModal } from "@/components/CureModal";
 import { BottomNav } from "@/components/BottomNav";
+import { loadGoals, Goals } from "@/lib/goals";
 
 interface CustomItem {
   id: string;
@@ -71,6 +72,9 @@ const Dashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<{ id: string; label: string; type: "exercise" | "supplement" } | null>(null);
 
+  // Goals
+  const [goals, setGoals] = useState<Goals>(loadGoals);
+
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -83,7 +87,7 @@ const Dashboard = () => {
     })
   );
 
-  // Load persistent custom items (once)
+  // Load persistent custom items and goals (once)
   useEffect(() => {
     const savedExercises = localStorage.getItem(CUSTOM_EXERCISES_KEY);
     const savedSupplements = localStorage.getItem(CUSTOM_SUPPLEMENTS_KEY);
@@ -103,6 +107,9 @@ const Dashboard = () => {
         setCustomSupplements([]);
       }
     }
+
+    // Reload goals when returning to dashboard
+    setGoals(loadGoals());
   }, []);
 
   // Load daily progress
@@ -264,8 +271,8 @@ const Dashboard = () => {
   const sportProgress = () => {
     let completed = 0;
     let total = 4 + customExercises.length;
-    if (pushups >= 200) completed++;
-    if (abs >= 100) completed++;
+    if (pushups >= goals.pushups) completed++;
+    if (abs >= goals.abs) completed++;
     if (footing) completed++;
     if (bikeComplete) completed++;
     completed += customExercises.filter((e) => exerciseChecked[e.id]).length;
@@ -337,7 +344,7 @@ const Dashboard = () => {
 
           <Counter
             label="Pompes"
-            goal={200}
+            goal={goals.pushups}
             value={pushups}
             onChange={setPushups}
             increments={[20, 50]}
@@ -345,7 +352,7 @@ const Dashboard = () => {
 
           <Counter
             label="Abdos"
-            goal={100}
+            goal={goals.abs}
             value={abs}
             onChange={setAbs}
             increments={[20, 50]}
@@ -355,7 +362,7 @@ const Dashboard = () => {
 
           <TimerCard
             label="Vélo"
-            duration={20 * 60}
+            duration={goals.bikeDuration * 60}
             isComplete={bikeComplete}
             onComplete={setBikeComplete}
           />
