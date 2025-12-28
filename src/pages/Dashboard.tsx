@@ -154,7 +154,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="sticky top-0 z-30 glass-card border-b border-border/50 px-4 py-4">
         <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gradient-emerald">Longevity Path</h1>
+          <h1 className="text-xl font-bold text-gradient-emerald">Hero</h1>
           <p className="text-xs text-muted-foreground">
             {new Date().toLocaleDateString("fr-FR", {
               weekday: "long",
