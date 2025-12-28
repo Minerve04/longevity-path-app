@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
-import { Flame, Target, TrendingUp, Pill } from "lucide-react";
+import { Flame, Target, TrendingUp, Pill, Dumbbell } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -9,13 +9,25 @@ type Period = "week" | "month" | "year";
 interface DayData {
   pushups: number;
   abs: number;
+  footing?: boolean;
+  bikeComplete?: boolean;
+  customExercises?: { id: string; label: string; checked: boolean }[];
   supplements?: {
     codLiverOil: boolean;
     pumpkinOil: boolean;
     garlicCapsule: boolean;
     antioxidantTea: boolean;
   };
-  customSupplements?: { id: string; name: string; checked: boolean }[];
+  customSupplements?: { id: string; label: string; checked: boolean }[];
+}
+
+interface ExerciseStat {
+  id: string;
+  name: string;
+  emoji: string;
+  daysDone: number;
+  totalDays: number;
+  percentage: number;
 }
 
 interface SupplementStat {
@@ -26,6 +38,11 @@ interface SupplementStat {
   totalDays: number;
   percentage: number;
 }
+
+const defaultExercises = [
+  { id: "footing", name: "Footing", emoji: "🏃" },
+  { id: "bike", name: "Vélo", emoji: "🚴" },
+];
 
 const defaultSupplements = [
   { id: "codLiverOil", name: "Huile de foie de morue", emoji: "🐟" },
@@ -64,6 +81,10 @@ const Stats = () => {
     let currentStreak = 0;
     let tempStreak = 0;
 
+    // Exercise tracking
+    const exerciseCounts: Record<string, number> = {};
+    const customExerciseCounts: Record<string, { name: string; count: number }> = {};
+
     // Supplements tracking
     const supplementCounts: Record<string, number> = {};
     const customSupplementCounts: Record<string, { name: string; count: number }> = {};
@@ -85,6 +106,29 @@ const Stats = () => {
           tempStreak = 0;
         }
 
+        // Count default exercises
+        if (dayData.footing) {
+          exerciseCounts["footing"] = (exerciseCounts["footing"] || 0) + 1;
+        }
+        if (dayData.bikeComplete) {
+          exerciseCounts["bike"] = (exerciseCounts["bike"] || 0) + 1;
+        }
+
+        // Count custom exercises
+        if (dayData.customExercises) {
+          dayData.customExercises.forEach(ex => {
+            if (ex.checked) {
+              if (!customExerciseCounts[ex.id]) {
+                customExerciseCounts[ex.id] = { name: ex.label, count: 0 };
+              }
+              customExerciseCounts[ex.id].count++;
+            } else if (!customExerciseCounts[ex.id]) {
+              // Track the exercise even if not checked (to show it exists)
+              customExerciseCounts[ex.id] = { name: ex.label, count: 0 };
+            }
+          });
+        }
+
         // Count supplements
         if (dayData.supplements) {
           defaultSupplements.forEach(supp => {
@@ -99,9 +143,12 @@ const Stats = () => {
           dayData.customSupplements.forEach(cs => {
             if (cs.checked) {
               if (!customSupplementCounts[cs.id]) {
-                customSupplementCounts[cs.id] = { name: cs.name, count: 0 };
+                customSupplementCounts[cs.id] = { name: cs.label, count: 0 };
               }
               customSupplementCounts[cs.id].count++;
+            } else if (!customSupplementCounts[cs.id]) {
+              // Track the supplement even if not checked
+              customSupplementCounts[cs.id] = { name: cs.label, count: 0 };
             }
           });
         }
@@ -109,6 +156,32 @@ const Stats = () => {
     });
 
     const totalDays = dates.length;
+
+    // Build exercise stats
+    const exercisesStats: ExerciseStat[] = defaultExercises.map(ex => ({
+      id: ex.id,
+      name: ex.name,
+      emoji: ex.emoji,
+      daysDone: exerciseCounts[ex.id] || 0,
+      totalDays,
+      percentage: Math.round(((exerciseCounts[ex.id] || 0) / totalDays) * 100),
+    }));
+
+    // Add custom exercises
+    Object.entries(customExerciseCounts).forEach(([id, data]) => {
+      exercisesStats.push({
+        id,
+        name: data.name,
+        emoji: "🏋️",
+        daysDone: data.count,
+        totalDays,
+        percentage: Math.round((data.count / totalDays) * 100),
+      });
+    });
+
+    const avgExerciseRegularity = exercisesStats.length > 0
+      ? Math.round(exercisesStats.reduce((acc, e) => acc + e.percentage, 0) / exercisesStats.length)
+      : 0;
 
     // Build supplements stats
     const supplementsStats: SupplementStat[] = defaultSupplements.map(supp => ({
@@ -142,6 +215,8 @@ const Stats = () => {
       streak: currentStreak,
       avgCompletion: Math.round((completedDays / totalDays) * 100),
       totalDays,
+      exercisesStats,
+      avgExerciseRegularity,
       supplementsStats,
       avgSupplementRegularity,
     };
@@ -292,6 +367,48 @@ const Stats = () => {
             <span>Objectif: {30 * goalMultiplier}</span>
             <span>Total: {stats.totalAbs}</span>
           </div>
+        </div>
+
+        {/* Exercises Tracking Table */}
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Dumbbell className="w-5 h-5 text-blue-400" />
+              <h3 className="text-white font-medium">Exercices</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <span className="text-emerald-400 text-sm font-medium">{stats.avgExerciseRegularity}%</span>
+            </div>
+          </div>
+
+          {stats.exercisesStats.length > 0 ? (
+            <div className="space-y-3">
+              {stats.exercisesStats.map((ex) => (
+                <div key={ex.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">
+                      {ex.emoji} {ex.name}
+                    </span>
+                    <span className="text-slate-400">
+                      {ex.daysDone}/{ex.totalDays}
+                      {ex.percentage === 100 && " ⭐"}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getProgressColor(ex.percentage)}`}
+                      style={{ width: `${ex.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-400 text-sm text-center py-4">
+              Aucune donnée d'exercices pour {periodLabel}
+            </p>
+          )}
         </div>
 
         {/* Supplements Tracking Table */}
