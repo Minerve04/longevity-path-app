@@ -123,8 +123,29 @@ const Dashboard = () => {
         setFooting(data.footing || false);
         setBikeComplete(data.bikeComplete || false);
         setSupplements(data.supplements || supplements);
-        setExerciseChecked(data.exerciseChecked || {});
-        setSupplementChecked(data.supplementChecked || {});
+        
+        // Load custom exercises checked state (support both old and new format)
+        if (data.customExercises && Array.isArray(data.customExercises)) {
+          const checked: DailyCheckedState = {};
+          data.customExercises.forEach((e: { id: string; checked: boolean }) => {
+            checked[e.id] = e.checked || false;
+          });
+          setExerciseChecked(checked);
+        } else if (data.exerciseChecked) {
+          setExerciseChecked(data.exerciseChecked);
+        }
+        
+        // Load custom supplements checked state (support both old and new format)
+        if (data.customSupplements && Array.isArray(data.customSupplements)) {
+          const checked: DailyCheckedState = {};
+          data.customSupplements.forEach((s: { id: string; checked: boolean }) => {
+            checked[s.id] = s.checked || false;
+          });
+          setSupplementChecked(checked);
+        } else if (data.supplementChecked) {
+          setSupplementChecked(data.supplementChecked);
+        }
+        
         setActiveCure(data.activeCure || null);
         setCureTasks(data.cureTasks || []);
         setCureChecked(data.cureChecked || {});
@@ -142,14 +163,23 @@ const Dashboard = () => {
       footing,
       bikeComplete,
       supplements,
-      exerciseChecked,
-      supplementChecked,
+      // Save custom items with full data for stats
+      customExercises: customExercises.map(e => ({
+        id: e.id,
+        label: e.label,
+        checked: exerciseChecked[e.id] || false
+      })),
+      customSupplements: customSupplements.map(s => ({
+        id: s.id,
+        label: s.label,
+        checked: supplementChecked[s.id] || false
+      })),
       activeCure,
       cureTasks,
       cureChecked,
     };
     localStorage.setItem(getDailyKey(), JSON.stringify(data));
-  }, [pushups, abs, footing, bikeComplete, supplements, exerciseChecked, supplementChecked, activeCure, cureTasks, cureChecked]);
+  }, [pushups, abs, footing, bikeComplete, supplements, exerciseChecked, supplementChecked, customExercises, customSupplements, activeCure, cureTasks, cureChecked]);
 
   // Save persistent custom items
   useEffect(() => {
