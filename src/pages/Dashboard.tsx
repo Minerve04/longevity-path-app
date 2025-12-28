@@ -1,14 +1,29 @@
 import { useState, useEffect } from "react";
-import { Dumbbell, Salad, Sparkles, Trash2, Pencil } from "lucide-react";
+import { Dumbbell, Salad, Sparkles } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Counter } from "@/components/Counter";
 import { TimerCard } from "@/components/TimerCard";
 import { CheckItem } from "@/components/CheckItem";
 import { AddItemModal } from "@/components/AddItemModal";
 import { EditItemModal } from "@/components/EditItemModal";
+import { SortableItem } from "@/components/SortableItem";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { CureModal } from "@/components/CureModal";
 import { BottomNav } from "@/components/BottomNav";
-import { Button } from "@/components/ui/button";
 
 interface CustomItem {
   id: string;
@@ -55,6 +70,18 @@ const Dashboard = () => {
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<{ id: string; label: string; type: "exercise" | "supplement" } | null>(null);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Load persistent custom items (once)
   useEffect(() => {
@@ -190,6 +217,28 @@ const Dashboard = () => {
     }
   };
 
+  const handleExerciseDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setCustomExercises((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleSupplementDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setCustomSupplements((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   const handleActivateCure = (cureId: string, tasks: string[], duration: number) => {
     setActiveCure(cureId);
     setCureTasks(
@@ -311,33 +360,30 @@ const Dashboard = () => {
             onComplete={setBikeComplete}
           />
 
-          {customExercises.map((exercise) => (
-            <div key={exercise.id} className="flex items-center gap-1">
-              <div className="flex-1">
-                <CheckItem
-                  label={exercise.label}
-                  checked={exerciseChecked[exercise.id] || false}
-                  onToggle={() => toggleCustomExercise(exercise.id)}
-                />
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleExerciseDragEnd}
+          >
+            <SortableContext
+              items={customExercises.map((e) => e.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {customExercises.map((exercise) => (
+                  <SortableItem
+                    key={exercise.id}
+                    id={exercise.id}
+                    label={exercise.label}
+                    checked={exerciseChecked[exercise.id] || false}
+                    onToggle={() => toggleCustomExercise(exercise.id)}
+                    onEdit={() => openEditModal(exercise.id, exercise.label, "exercise")}
+                    onRemove={() => removeCustomExercise(exercise.id)}
+                  />
+                ))}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0"
-                onClick={() => openEditModal(exercise.id, exercise.label, "exercise")}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                onClick={() => removeCustomExercise(exercise.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+            </SortableContext>
+          </DndContext>
 
           <AddItemModal onAdd={addCustomExercise} type="exercise" />
         </section>
@@ -373,33 +419,30 @@ const Dashboard = () => {
             onToggle={() => toggleSupplement("antioxidantTea")}
           />
 
-          {customSupplements.map((supplement) => (
-            <div key={supplement.id} className="flex items-center gap-1">
-              <div className="flex-1">
-                <CheckItem
-                  label={supplement.label}
-                  checked={supplementChecked[supplement.id] || false}
-                  onToggle={() => toggleCustomSupplement(supplement.id)}
-                />
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleSupplementDragEnd}
+          >
+            <SortableContext
+              items={customSupplements.map((s) => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {customSupplements.map((supplement) => (
+                  <SortableItem
+                    key={supplement.id}
+                    id={supplement.id}
+                    label={supplement.label}
+                    checked={supplementChecked[supplement.id] || false}
+                    onToggle={() => toggleCustomSupplement(supplement.id)}
+                    onEdit={() => openEditModal(supplement.id, supplement.label, "supplement")}
+                    onRemove={() => removeCustomSupplement(supplement.id)}
+                  />
+                ))}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0"
-                onClick={() => openEditModal(supplement.id, supplement.label, "supplement")}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                onClick={() => removeCustomSupplement(supplement.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+            </SortableContext>
+          </DndContext>
 
           <AddItemModal onAdd={addCustomSupplement} type="supplement" />
         </section>
