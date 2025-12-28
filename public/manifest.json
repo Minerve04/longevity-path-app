@@ -1,6 +1,6 @@
 {
-  "name": "Longevity Path",
-  "short_name": "Longevity",
+  "name": "Hero",
+  "short_name": "Hero",
   "description": "Application de coaching santé haute performance",
   "start_url": "/",
   "display": "standalone",
@@ -9,9 +9,9 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
+      "src": "/hero-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
     }
   ]
 }

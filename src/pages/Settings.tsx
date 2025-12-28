@@ -85,7 +85,7 @@ const SettingsPage = () => {
               <Info className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-foreground">Longevity Path</h3>
+              <h3 className="text-sm font-medium text-foreground">Hero</h3>
               <p className="text-xs text-muted-foreground">Version 1.0.0</p>
             </div>
           </div>
