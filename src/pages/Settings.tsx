@@ -1,7 +1,8 @@
-import { Settings2, Bell, Moon, Trash2, Info } from "lucide-react";
+import { Bell, Moon, Trash2, Info } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ReminderManager } from "@/components/ReminderManager";
 
 const SettingsPage = () => {
   const handleClearData = () => {
@@ -90,33 +91,8 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Reminder Schedule */}
-        <section className="mt-6 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Horaires des rappels</h2>
-          <div className="glass-card rounded-2xl divide-y divide-border/50">
-            <div className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">08:00</p>
-                <p className="text-xs text-muted-foreground">Suppléments du matin</p>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-primary glow-emerald" />
-            </div>
-            <div className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">09:00</p>
-                <p className="text-xs text-muted-foreground">Session sport</p>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-primary glow-emerald" />
-            </div>
-            <div className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">20:00</p>
-                <p className="text-xs text-muted-foreground">Tisane antioxydante</p>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-primary glow-emerald" />
-            </div>
-          </div>
-        </section>
+        {/* Reminder Manager */}
+        <ReminderManager />
       </main>
 
       <BottomNav />
