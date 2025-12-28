@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,13 +15,28 @@ interface AddCureModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (cure: Cure) => void;
+  onEdit?: (cure: Cure) => void;
+  editingCure?: Cure | null;
 }
 
-export const AddCureModal = ({ open, onOpenChange, onAdd }: AddCureModalProps) => {
+export const AddCureModal = ({ open, onOpenChange, onAdd, onEdit, editingCure }: AddCureModalProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(21);
   const [tasks, setTasks] = useState<string[]>([""]);
+
+  const isEditing = !!editingCure;
+
+  useEffect(() => {
+    if (editingCure) {
+      setName(editingCure.name);
+      setDescription(editingCure.description);
+      setDuration(editingCure.duration);
+      setTasks(editingCure.tasks.length > 0 ? editingCure.tasks : [""]);
+    } else {
+      resetForm();
+    }
+  }, [editingCure, open]);
 
   const handleAddTask = () => {
     setTasks([...tasks, ""]);
@@ -43,17 +58,28 @@ export const AddCureModal = ({ open, onOpenChange, onAdd }: AddCureModalProps) =
     const validTasks = tasks.filter((t) => t.trim());
     if (validTasks.length === 0) return;
 
-    const newCure: Cure = {
-      id: `custom-${Date.now()}`,
-      name: name.trim(),
-      description: description.trim() || "Cure personnalisée",
-      duration,
-      tasks: validTasks,
-      icon: "custom",
-      isCustom: true,
-    };
+    if (isEditing && editingCure && onEdit) {
+      const updatedCure: Cure = {
+        ...editingCure,
+        name: name.trim(),
+        description: description.trim() || "Cure personnalisée",
+        duration,
+        tasks: validTasks,
+      };
+      onEdit(updatedCure);
+    } else {
+      const newCure: Cure = {
+        id: `custom-${Date.now()}`,
+        name: name.trim(),
+        description: description.trim() || "Cure personnalisée",
+        duration,
+        tasks: validTasks,
+        icon: "custom",
+        isCustom: true,
+      };
+      onAdd(newCure);
+    }
 
-    onAdd(newCure);
     resetForm();
     onOpenChange(false);
   };
@@ -69,7 +95,9 @@ export const AddCureModal = ({ open, onOpenChange, onAdd }: AddCureModalProps) =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card border-border/50 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Créer une Cure</DialogTitle>
+          <DialogTitle className="text-foreground">
+            {isEditing ? "Modifier la Cure" : "Créer une Cure"}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div>
@@ -147,7 +175,7 @@ export const AddCureModal = ({ open, onOpenChange, onAdd }: AddCureModalProps) =
             className="w-full bg-primary hover:bg-primary/90"
             disabled={!name.trim() || tasks.filter((t) => t.trim()).length === 0}
           >
-            Créer la Cure
+            {isEditing ? "Enregistrer" : "Créer la Cure"}
           </Button>
         </div>
       </DialogContent>
