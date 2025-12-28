@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
 import { Flame, Target, TrendingUp, Pill } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { BottomNav } from "@/components/BottomNav";
 
 type Period = "week" | "month" | "year";
 
@@ -336,6 +336,8 @@ const Stats = () => {
           )}
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 };
