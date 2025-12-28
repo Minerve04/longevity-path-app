@@ -8,6 +8,21 @@ interface Notification {
   message: string;
 }
 
+interface NotificationBannerProps {
+  supplements?: {
+    codLiverOil: boolean;
+    pumpkinOil: boolean;
+    garlicCapsule: boolean;
+    antioxidantTea: boolean;
+  };
+  sportCompleted?: {
+    pushups: boolean;
+    abs: boolean;
+    footing: boolean;
+    bike: boolean;
+  };
+}
+
 const SCHEDULED_NOTIFICATIONS: Notification[] = [
   {
     id: "morning-supplements",
@@ -26,9 +41,23 @@ const SCHEDULED_NOTIFICATIONS: Notification[] = [
   },
 ];
 
-export const NotificationBanner = () => {
+export const NotificationBanner = ({ supplements, sportCompleted }: NotificationBannerProps) => {
   const [activeNotification, setActiveNotification] = useState<Notification | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+
+  // Check if a notification's tasks are already completed
+  const isTaskCompleted = (id: string): boolean => {
+    switch (id) {
+      case "morning-supplements":
+        return !!(supplements?.codLiverOil && supplements?.pumpkinOil && supplements?.garlicCapsule);
+      case "sport-session":
+        return !!(sportCompleted?.pushups && sportCompleted?.abs && sportCompleted?.footing && sportCompleted?.bike);
+      case "evening-tea":
+        return !!supplements?.antioxidantTea;
+      default:
+        return false;
+    }
+  };
 
   useEffect(() => {
     const checkNotifications = () => {
@@ -36,7 +65,7 @@ export const NotificationBanner = () => {
       const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
       const matching = SCHEDULED_NOTIFICATIONS.find(
-        (n) => n.time === currentTime && !dismissed.has(n.id)
+        (n) => n.time === currentTime && !dismissed.has(n.id) && !isTaskCompleted(n.id)
       );
 
       if (matching) {
@@ -49,7 +78,14 @@ export const NotificationBanner = () => {
     const interval = setInterval(checkNotifications, 60000);
 
     return () => clearInterval(interval);
-  }, [dismissed]);
+  }, [dismissed, supplements, sportCompleted]);
+
+  // Auto-dismiss if tasks are completed while notification is shown
+  useEffect(() => {
+    if (activeNotification && isTaskCompleted(activeNotification.id)) {
+      setActiveNotification(null);
+    }
+  }, [supplements, sportCompleted, activeNotification]);
 
   const dismissNotification = () => {
     if (activeNotification) {
@@ -58,10 +94,10 @@ export const NotificationBanner = () => {
     }
   };
 
-  // Demo: show first notification for 5 seconds on load
+  // Demo: show first notification for 5 seconds on load (only if tasks not completed)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!activeNotification) {
+      if (!activeNotification && !isTaskCompleted("morning-supplements")) {
         setActiveNotification(SCHEDULED_NOTIFICATIONS[0]);
       }
     }, 1000);

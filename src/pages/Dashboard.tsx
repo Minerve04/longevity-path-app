@@ -318,7 +318,15 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <NotificationBanner />
+      <NotificationBanner
+        supplements={supplements}
+        sportCompleted={{
+          pushups: pushups >= goals.pushups,
+          abs: abs >= goals.abs,
+          footing: footing,
+          bike: bikeComplete,
+        }}
+      />
 
       {/* Header */}
       <header className="sticky top-0 z-30 glass-card border-b border-border/50 px-4 py-4">
