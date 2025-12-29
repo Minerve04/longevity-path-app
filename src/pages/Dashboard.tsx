@@ -38,7 +38,8 @@ interface DailyCheckedState {
 // Storage keys
 const CUSTOM_EXERCISES_KEY = "hero-custom-exercises";
 const CUSTOM_SUPPLEMENTS_KEY = "hero-custom-supplements";
-const getDailyKey = () => `longevity-${new Date().toDateString()}`;
+const getDailyKey = (date: Date = new Date()) => `longevity-${date.toISOString().split('T')[0]}`;
+const getOldDailyKey = (date: Date = new Date()) => `longevity-${date.toDateString()}`;
 
 const Dashboard = () => {
   // Sport state
@@ -112,9 +113,20 @@ const Dashboard = () => {
     setGoals(loadGoals());
   }, []);
 
-  // Load daily progress
+  // Load daily progress with migration from old key format
   useEffect(() => {
-    const saved = localStorage.getItem(getDailyKey());
+    const today = new Date();
+    const newKey = getDailyKey(today);
+    const oldKey = getOldDailyKey(today);
+    
+    // Migrate old data if exists
+    const oldData = localStorage.getItem(oldKey);
+    if (oldData && !localStorage.getItem(newKey)) {
+      localStorage.setItem(newKey, oldData);
+      localStorage.removeItem(oldKey);
+    }
+    
+    const saved = localStorage.getItem(newKey);
     if (saved) {
       try {
         const data = JSON.parse(saved);
