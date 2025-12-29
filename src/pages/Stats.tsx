@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
-import { Flame, Target, TrendingUp, Pill, Dumbbell } from "lucide-react";
+import { Flame, Target, TrendingUp, Pill, Dumbbell, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -19,6 +19,17 @@ interface DayData {
     antioxidantTea: boolean;
   };
   customSupplements?: { id: string; label: string; checked: boolean }[];
+  activeCure?: string | null;
+  cureTasks?: { id: string; label: string }[];
+  cureChecked?: { [id: string]: boolean };
+}
+
+interface CureTaskStat {
+  id: string;
+  name: string;
+  daysDone: number;
+  totalDays: number;
+  percentage: number;
 }
 
 interface ExerciseStat {
@@ -89,6 +100,11 @@ const Stats = () => {
     const supplementCounts: Record<string, number> = {};
     const customSupplementCounts: Record<string, { name: string; count: number }> = {};
 
+    // Cure tracking
+    const cureTaskCounts: Record<string, { name: string; count: number; totalDays: number }> = {};
+    let cureDaysActive = 0;
+    let cureDaysCompleted = 0;
+
     dates.forEach((date, index) => {
       const dayData = getDayData(date);
       if (dayData) {
@@ -152,6 +168,30 @@ const Stats = () => {
             }
           });
         }
+
+        // Count cure tasks
+        if (dayData.activeCure && dayData.cureTasks && dayData.cureTasks.length > 0) {
+          cureDaysActive++;
+          let allTasksDone = true;
+          
+          dayData.cureTasks.forEach(task => {
+            const taskKey = `${dayData.activeCure}-${task.label}`;
+            if (!cureTaskCounts[taskKey]) {
+              cureTaskCounts[taskKey] = { name: task.label, count: 0, totalDays: 0 };
+            }
+            cureTaskCounts[taskKey].totalDays++;
+            
+            if (dayData.cureChecked?.[task.id]) {
+              cureTaskCounts[taskKey].count++;
+            } else {
+              allTasksDone = false;
+            }
+          });
+          
+          if (allTasksDone && dayData.cureTasks.length > 0) {
+            cureDaysCompleted++;
+          }
+        }
       }
     });
 
@@ -209,6 +249,19 @@ const Stats = () => {
       ? Math.round(supplementsStats.reduce((acc, s) => acc + s.percentage, 0) / supplementsStats.length)
       : 0;
 
+    // Build cure stats
+    const cureTasksStats: CureTaskStat[] = Object.entries(cureTaskCounts).map(([id, data]) => ({
+      id,
+      name: data.name,
+      daysDone: data.count,
+      totalDays: data.totalDays,
+      percentage: data.totalDays > 0 ? Math.round((data.count / data.totalDays) * 100) : 0,
+    }));
+
+    const avgCureRegularity = cureTasksStats.length > 0
+      ? Math.round(cureTasksStats.reduce((acc, c) => acc + c.percentage, 0) / cureTasksStats.length)
+      : 0;
+
     return {
       totalPushups,
       totalAbs,
@@ -219,6 +272,10 @@ const Stats = () => {
       avgExerciseRegularity,
       supplementsStats,
       avgSupplementRegularity,
+      cureTasksStats,
+      avgCureRegularity,
+      cureDaysActive,
+      cureDaysCompleted,
     };
   }, [period]);
 
@@ -452,6 +509,55 @@ const Stats = () => {
             </p>
           )}
         </div>
+
+        {/* Cure Tracking Section */}
+        {stats.cureTasksStats.length > 0 && (
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                <h3 className="text-white font-medium">Cures</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <span className="text-emerald-400 text-sm font-medium">{stats.avgCureRegularity}%</span>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mb-4 text-xs">
+              <div className="flex items-center gap-1">
+                <span className="text-slate-400">Jours actifs:</span>
+                <span className="text-white font-medium">{stats.cureDaysActive}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-400">Jours 100%:</span>
+                <span className="text-emerald-400 font-medium">{stats.cureDaysCompleted}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {stats.cureTasksStats.map((task) => (
+                <div key={task.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">
+                      ✨ {task.name}
+                    </span>
+                    <span className="text-slate-400">
+                      {task.daysDone}/{task.totalDays}
+                      {task.percentage === 100 && " ⭐"}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getProgressColor(task.percentage)}`}
+                      style={{ width: `${task.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <BottomNav />
