@@ -3,6 +3,9 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts
 import { Flame, Target, TrendingUp, Pill, Dumbbell, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomNav } from "@/components/BottomNav";
+import { MonthHeatmap } from "@/components/MonthHeatmap";
+import { WeeklyTrend } from "@/components/WeeklyTrend";
+import { PersonalRecords } from "@/components/PersonalRecords";
 
 type Period = "week" | "month" | "year";
 
@@ -336,56 +339,60 @@ const Stats = () => {
   const goalMultiplier = period === "week" ? 1 : period === "month" ? 4 : 52;
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 80) return "bg-emerald-500";
-    if (percentage >= 50) return "bg-yellow-500";
-    return "bg-red-400";
+    if (percentage >= 80) return "bg-success";
+    if (percentage >= 50) return "bg-accent";
+    return "bg-destructive/70";
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 pb-24">
+    <div className="min-h-screen bg-background p-4 pb-24">
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center pt-4">
-          <h1 className="text-2xl font-bold text-white">Statistiques</h1>
-          <p className="text-slate-400 text-sm">Votre progression</p>
+          <h1 className="text-2xl font-extrabold text-gradient-emerald">Statistiques</h1>
+          <p className="text-sm font-semibold text-muted-foreground">Votre progression</p>
         </div>
 
         <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-slate-700">
-            <TabsTrigger value="week" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
+          <TabsList className="grid w-full grid-cols-3 bg-secondary border border-border">
+            <TabsTrigger value="week" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Semaine
             </TabsTrigger>
-            <TabsTrigger value="month" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
+            <TabsTrigger value="month" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Mois
             </TabsTrigger>
-            <TabsTrigger value="year" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
+            <TabsTrigger value="year" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Année
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
+        <PersonalRecords />
+        <MonthHeatmap />
+        <WeeklyTrend />
+
         <div className="grid grid-cols-2 gap-4">
-          <div className="glass-card p-4 text-center">
-            <Flame className="w-6 h-6 text-orange-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{stats.streak}</p>
-            <p className="text-xs text-slate-400">Jours de série</p>
+          <div className="card-float p-4 text-center">
+            <Flame className="w-6 h-6 text-sport mx-auto mb-2" />
+            <p className="text-2xl font-extrabold text-gradient-emerald">{stats.streak}</p>
+            <p className="text-xs font-semibold text-muted-foreground">Jours de série</p>
           </div>
-          <div className="glass-card p-4 text-center">
-            <Target className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{stats.avgCompletion}%</p>
-            <p className="text-xs text-slate-400">Complétion</p>
+          <div className="card-float p-4 text-center">
+            <Target className="w-6 h-6 text-primary mx-auto mb-2" />
+            <p className="text-2xl font-extrabold text-gradient-emerald">{stats.avgCompletion}%</p>
+            <p className="text-xs font-semibold text-muted-foreground">Complétion</p>
           </div>
         </div>
 
         {/* Pushups Chart */}
-        <div className="glass-card p-4">
+        <div className="card-float p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-medium">💪 Pompes</h3>
-            <span className="text-emerald-400 text-sm">{periodLabel}</span>
+            <h3 className="font-extrabold text-foreground">💪 Pompes</h3>
+            <span className="text-sm font-bold text-primary">{periodLabel}</span>
           </div>
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} />
                 <YAxis hide />
                 <Bar dataKey="pushups" radius={[4, 4, 0, 0]}>
                   {chartData.map((_, index) => (
@@ -395,22 +402,22 @@ const Stats = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-between text-xs text-slate-400 mt-2">
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground mt-2">
             <span>Objectif: {50 * goalMultiplier}</span>
             <span>Total: {stats.totalPushups}</span>
           </div>
         </div>
 
         {/* Abs Chart */}
-        <div className="glass-card p-4">
+        <div className="card-float p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-medium">🔥 Abdos</h3>
-            <span className="text-emerald-400 text-sm">{periodLabel}</span>
+            <h3 className="font-extrabold text-foreground">🔥 Abdos</h3>
+            <span className="text-sm font-bold text-primary">{periodLabel}</span>
           </div>
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} />
                 <YAxis hide />
                 <Bar dataKey="abs" radius={[4, 4, 0, 0]}>
                   {chartData.map((_, index) => (
@@ -420,22 +427,22 @@ const Stats = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-between text-xs text-slate-400 mt-2">
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground mt-2">
             <span>Objectif: {30 * goalMultiplier}</span>
             <span>Total: {stats.totalAbs}</span>
           </div>
         </div>
 
         {/* Exercises Tracking Table */}
-        <div className="glass-card p-4">
+        <div className="card-float p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Dumbbell className="w-5 h-5 text-blue-400" />
-              <h3 className="text-white font-medium">Exercices</h3>
+              <Dumbbell className="w-5 h-5 text-supplement" />
+              <h3 className="font-extrabold text-foreground">Exercices</h3>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span className="text-emerald-400 text-sm font-medium">{stats.avgExerciseRegularity}%</span>
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-primary font-medium">{stats.avgExerciseRegularity}%</span>
             </div>
           </div>
 
@@ -444,15 +451,15 @@ const Stats = () => {
               {stats.exercisesStats.map((ex) => (
                 <div key={ex.id} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">
+                    <span className="text-foreground">
                       {ex.emoji} {ex.name}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                       {ex.daysDone}/{ex.totalDays}
                       {ex.percentage === 100 && " ⭐"}
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${getProgressColor(ex.percentage)}`}
                       style={{ width: `${ex.percentage}%` }}
@@ -462,22 +469,22 @@ const Stats = () => {
               ))}
             </div>
           ) : (
-            <p className="text-slate-400 text-sm text-center py-4">
+            <p className="text-sm font-semibold text-muted-foreground text-center py-4">
               Aucune donnée d'exercices pour {periodLabel}
             </p>
           )}
         </div>
 
         {/* Supplements Tracking Table */}
-        <div className="glass-card p-4">
+        <div className="card-float p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Pill className="w-5 h-5 text-purple-400" />
-              <h3 className="text-white font-medium">Suppléments</h3>
+              <Pill className="w-5 h-5 text-cure" />
+              <h3 className="font-extrabold text-foreground">Suppléments</h3>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span className="text-emerald-400 text-sm font-medium">{stats.avgSupplementRegularity}%</span>
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-primary font-medium">{stats.avgSupplementRegularity}%</span>
             </div>
           </div>
 
@@ -486,15 +493,15 @@ const Stats = () => {
               {stats.supplementsStats.map((supp) => (
                 <div key={supp.id} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">
+                    <span className="text-foreground">
                       {supp.emoji} {supp.name}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                       {supp.daysTaken}/{supp.totalDays}
                       {supp.percentage === 100 && " ⭐"}
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${getProgressColor(supp.percentage)}`}
                       style={{ width: `${supp.percentage}%` }}
@@ -504,7 +511,7 @@ const Stats = () => {
               ))}
             </div>
           ) : (
-            <p className="text-slate-400 text-sm text-center py-4">
+            <p className="text-sm font-semibold text-muted-foreground text-center py-4">
               Aucune donnée de suppléments pour {periodLabel}
             </p>
           )}
@@ -512,26 +519,26 @@ const Stats = () => {
 
         {/* Cure Tracking Section */}
         {stats.cureTasksStats.length > 0 && (
-          <div className="glass-card p-4">
+          <div className="card-float p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                <h3 className="text-white font-medium">Cures</h3>
+                <Sparkles className="w-5 h-5 text-accent" />
+                <h3 className="font-extrabold text-foreground">Cures</h3>
               </div>
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span className="text-emerald-400 text-sm font-medium">{stats.avgCureRegularity}%</span>
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-primary font-medium">{stats.avgCureRegularity}%</span>
               </div>
             </div>
 
             <div className="flex gap-4 mb-4 text-xs">
               <div className="flex items-center gap-1">
-                <span className="text-slate-400">Jours actifs:</span>
-                <span className="text-white font-medium">{stats.cureDaysActive}</span>
+                <span className="text-muted-foreground">Jours actifs:</span>
+                <span className="font-extrabold text-foreground">{stats.cureDaysActive}</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-slate-400">Jours 100%:</span>
-                <span className="text-emerald-400 font-medium">{stats.cureDaysCompleted}</span>
+                <span className="text-muted-foreground">Jours 100%:</span>
+                <span className="text-primary font-medium">{stats.cureDaysCompleted}</span>
               </div>
             </div>
 
@@ -539,15 +546,15 @@ const Stats = () => {
               {stats.cureTasksStats.map((task) => (
                 <div key={task.id} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">
+                    <span className="text-foreground">
                       ✨ {task.name}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                       {task.daysDone}/{task.totalDays}
                       {task.percentage === 100 && " ⭐"}
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${getProgressColor(task.percentage)}`}
                       style={{ width: `${task.percentage}%` }}
