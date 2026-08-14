@@ -461,19 +461,31 @@ const Dashboard = () => {
                 })}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <StreakBadge streak={streak} />
-              <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setGoalsEditorOpen(true)}
+                aria-label="Régler mes objectifs"
+                className="h-9 w-9 rounded-xl bg-secondary flex items-center justify-center text-primary transition-transform active:scale-95 hover:shadow-soft"
+              >
+                <Target className="h-4.5 w-4.5" strokeWidth={2.4} />
+              </button>
+              <div className="flex flex-col items-end gap-1">
+                <StreakBadge streak={streak} />
+                <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+              </div>
             </div>
           </div>
 
           {/* Jauge d'énergie du jour */}
           <div className="mt-3 h-4 rounded-full bg-secondary overflow-hidden">
             <div
-              className="h-full rounded-full gradient-energy transition-all duration-700 ease-out"
+              className={`h-full rounded-full gradient-energy transition-all duration-700 ease-out ${
+                gaugeGlow ? "animate-gauge-glow" : ""
+              }`}
               style={{ width: `${Math.max(dayProgress, 3)}%` }}
             />
           </div>
+
           <p className="mt-1.5 text-[11px] font-semibold text-muted-foreground">
             {doneTasks}/{totalTasks} actions accomplies aujourd'hui
           </p>
