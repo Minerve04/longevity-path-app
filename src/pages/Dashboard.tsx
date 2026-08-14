@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   Dumbbell,
@@ -38,6 +38,9 @@ import { NotificationBanner } from "@/components/NotificationBanner";
 import { CureModal } from "@/components/CureModal";
 import { BottomNav } from "@/components/BottomNav";
 import { loadGoals, Goals } from "@/lib/goals";
+import { saveDayEntry, getCurrentStreak, getEntry } from "@/lib/history";
+import { celebrate } from "@/lib/celebrate";
+import { StreakBadge } from "@/components/StreakBadge";
 
 interface CustomItem {
   id: string;
@@ -90,15 +93,14 @@ const Dashboard = () => {
   // Goals
   const [goals, setGoals] = useState<Goals>(loadGoals);
 
-  // Validation de la journée
+  // Validation de la journée + série
   const [dayValidated, setDayValidated] = useState(false);
+  const [streak, setStreak] = useState(0);
 
-  const handleValidateDay = () => {
-    setDayValidated(true);
-    toast.success("Bravo ! Journée validée", {
-      description: "Continue comme ça, ton énergie grimpe.",
-    });
-  };
+  useEffect(() => {
+    setDayValidated(getEntry(new Date())?.validated ?? false);
+    setStreak(getCurrentStreak());
+  }, []);
 
 
   // DnD sensors
@@ -370,6 +372,68 @@ const Dashboard = () => {
     cureTasks.filter((t) => cureChecked[t.id]).length;
   const dayProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
+  const handleValidateDay = () => {
+    saveDayEntry({
+      progress: dayProgress,
+      done: doneTasks,
+      total: totalTasks,
+      validated: true,
+    });
+    setDayValidated(true);
+    const newStreak = getCurrentStreak();
+    setStreak(newStreak);
+    celebrate("big");
+    toast.success("Bravo ! Journée validée", {
+      description:
+        newStreak > 1
+          ? `Série de ${newStreak} jours consécutifs. Continue comme ça !`
+          : "Ton énergie grimpe, reviens demain pour lancer ta série.",
+    });
+  };
+
+  // Historique du jour tenu à jour en continu
+  useEffect(() => {
+    if (totalTasks === 0) return;
+    saveDayEntry({
+      progress: dayProgress,
+      done: doneTasks,
+      total: totalTasks,
+      validated: dayValidated,
+    });
+  }, [dayProgress, doneTasks, totalTasks, dayValidated]);
+
+  // Célébration lorsqu'une section atteint 100 %
+  const sportPct = sportProgress();
+  const nutritionPct = nutritionProgress();
+  const curePct = cureTasks.length
+    ? Math.round((cureTasks.filter((t) => cureChecked[t.id]).length / cureTasks.length) * 100)
+    : 0;
+  const celebratedRef = useRef<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const sections: { key: string; pct: number; label: string; message: string }[] = [
+      { key: "sport", pct: sportPct, label: "Sport à 100 % !", message: "Ton corps te dit merci 💪" },
+      {
+        key: "nutrition",
+        pct: nutritionPct,
+        label: "Nutrition à 100 % !",
+        message: "Tous tes compléments sont pris 🥗",
+      },
+      ...(cureTasks.length
+        ? [{ key: "cure", pct: curePct, label: "Cure à 100 % !", message: "Constance parfaite ✨" }]
+        : []),
+    ];
+    sections.forEach((section) => {
+      if (section.pct >= 100 && !celebratedRef.current[section.key]) {
+        celebratedRef.current[section.key] = true;
+        celebrate("small");
+        toast.success(section.label, { description: section.message });
+      } else if (section.pct < 100) {
+        celebratedRef.current[section.key] = false;
+      }
+    });
+  }, [sportPct, nutritionPct, curePct, cureTasks.length]);
+
   return (
     <div className="min-h-screen bg-background pb-44">
       <NotificationBanner
@@ -397,7 +461,10 @@ const Dashboard = () => {
                 })}
               </p>
             </div>
-            <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+            <div className="flex flex-col items-end gap-1">
+              <StreakBadge streak={streak} />
+              <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+            </div>
           </div>
 
           {/* Jauge d'énergie du jour */}
@@ -455,7 +522,7 @@ const Dashboard = () => {
               <h2 className="text-base font-extrabold text-foreground">Sport</h2>
             </div>
             <span className="text-xs font-bold text-sport bg-sport-soft rounded-full px-2.5 py-1">
-              {sportProgress()}%
+              {sportPct}%
             </span>
           </div>
 
@@ -538,7 +605,7 @@ const Dashboard = () => {
               <h2 className="text-base font-extrabold text-foreground">Nutrition & Suppléments</h2>
             </div>
             <span className="text-xs font-bold text-supplement bg-supplement-soft rounded-full px-2.5 py-1">
-              {nutritionProgress()}%
+              {nutritionPct}%
             </span>
           </div>
 
