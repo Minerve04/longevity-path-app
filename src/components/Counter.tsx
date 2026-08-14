@@ -19,25 +19,41 @@ export const Counter = ({
   increments = [10, 20, 50] 
 }: CounterProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [popping, setPopping] = useState(false);
   const progress = Math.min((value / goal) * 100, 100);
   const isComplete = value >= goal;
+  const wasComplete = useRef(isComplete);
+
+  useEffect(() => {
+    if (isComplete && !wasComplete.current) {
+      setPopping(true);
+      haptic("success");
+      const t = setTimeout(() => setPopping(false), 450);
+      wasComplete.current = isComplete;
+      return () => clearTimeout(t);
+    }
+    wasComplete.current = isComplete;
+  }, [isComplete]);
 
   const handleIncrement = (amount: number) => {
     setIsAnimating(true);
+    haptic("light");
     onChange(Math.max(0, value + amount));
     setTimeout(() => setIsAnimating(false), 200);
   };
 
   const handleReset = () => {
+    haptic("light");
     onChange(0);
   };
 
   return (
     <div
-      className={`rounded-2xl p-4 border-2 shadow-soft animate-slide-up transition-all duration-300 ${
-        isComplete ? "bg-sport-soft border-sport" : "bg-card border-border/60"
-      }`}
+      className={`rounded-2xl p-4 border-2 shadow-soft transition-all duration-300 ${
+        popping ? "animate-pop" : "animate-slide-up"
+      } ${isComplete ? "bg-sport-soft border-sport" : "bg-card border-border/60"}`}
     >
+
       <div className="flex items-center justify-between mb-3">
         <span className={`text-base font-bold ${isComplete ? "text-sport" : "text-foreground"}`}>
           {label}
