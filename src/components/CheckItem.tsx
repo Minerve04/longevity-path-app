@@ -1,35 +1,84 @@
-import { Check } from "lucide-react";
+import { Check, LucideIcon, CircleDot } from "lucide-react";
+
+export type CheckVariant = "sport" | "supplement" | "cure";
 
 interface CheckItemProps {
   label: string;
   checked: boolean;
   onToggle: () => void;
+  variant?: CheckVariant;
+  icon?: LucideIcon;
 }
 
-export const CheckItem = ({ label, checked, onToggle }: CheckItemProps) => {
+const variantStyles: Record<
+  CheckVariant,
+  { active: string; idle: string; iconBg: string; iconColor: string; check: string; text: string }
+> = {
+  sport: {
+    active: "bg-sport-soft border-sport",
+    idle: "bg-card border-border/60",
+    iconBg: "bg-sport-soft",
+    iconColor: "text-sport",
+    check: "bg-sport border-sport",
+    text: "text-sport",
+  },
+  supplement: {
+    active: "bg-supplement-soft border-supplement",
+    idle: "bg-card border-border/60",
+    iconBg: "bg-supplement-soft",
+    iconColor: "text-supplement",
+    check: "bg-supplement border-supplement",
+    text: "text-supplement",
+  },
+  cure: {
+    active: "bg-cure-soft border-cure",
+    idle: "bg-card border-border/60",
+    iconBg: "bg-cure-soft",
+    iconColor: "text-cure",
+    check: "bg-cure border-cure",
+    text: "text-cure",
+  },
+};
+
+export const CheckItem = ({
+  label,
+  checked,
+  onToggle,
+  variant = "sport",
+  icon: Icon = CircleDot,
+}: CheckItemProps) => {
+  const s = variantStyles[variant];
+
   return (
     <button
       onClick={onToggle}
-      className={`w-full glass-card rounded-xl p-4 flex items-center gap-3 transition-all duration-200 animate-slide-up ${
-        checked ? "border-primary/50" : "hover:bg-secondary/50"
-      }`}
+      className={`w-full rounded-2xl p-4 flex items-center gap-4 border-2 shadow-soft text-left
+        transition-all duration-300 ease-out active:scale-[0.98] hover:shadow-float animate-slide-up
+        ${checked ? s.active : s.idle}`}
     >
       <div
-        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-          checked
-            ? "bg-primary border-primary glow-emerald"
-            : "border-muted-foreground/30"
+        className={`h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${
+          checked ? "bg-card" : s.iconBg
         }`}
       >
-        {checked && <Check className="h-4 w-4 text-primary-foreground" />}
+        <Icon className={`h-6 w-6 ${s.iconColor}`} strokeWidth={2.2} />
       </div>
+
       <span
-        className={`text-sm font-medium transition-colors ${
-          checked ? "text-primary" : "text-foreground"
+        className={`flex-1 text-base font-bold transition-colors duration-300 ${
+          checked ? s.text : "text-foreground"
         }`}
       >
         {label}
       </span>
+
+      <div
+        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+          checked ? s.check : "border-muted-foreground/25 bg-secondary"
+        }`}
+      >
+        {checked && <Check className="h-4 w-4 text-white" strokeWidth={3} />}
+      </div>
     </button>
   );
 };
