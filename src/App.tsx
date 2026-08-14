@@ -20,6 +20,7 @@ const App = () => (
       <TooltipProvider>
         <SplashScreen />
         <NotificationPermission />
+        <ReminderRunner />
         <PWAInstallPrompt />
         <Toaster />
         <Sonner />
