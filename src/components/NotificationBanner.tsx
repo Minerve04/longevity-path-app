@@ -18,6 +18,7 @@ interface NotificationBannerProps {
   sportCompleted?: {
     pushups: boolean;
     abs: boolean;
+    squats?: boolean;
     footing: boolean;
     bike: boolean;
   };
