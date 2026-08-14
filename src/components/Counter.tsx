@@ -32,32 +32,36 @@ export const Counter = ({
   };
 
   return (
-    <div className="glass-card rounded-2xl p-4 animate-slide-up">
+    <div
+      className={`rounded-2xl p-4 border-2 shadow-soft animate-slide-up transition-all duration-300 ${
+        isComplete ? "bg-sport-soft border-sport" : "bg-card border-border/60"
+      }`}
+    >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        <span className={`text-base font-bold ${isComplete ? "text-sport" : "text-foreground"}`}>
+          {label}
+        </span>
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
           onClick={handleReset}
         >
-          <RotateCcw className="h-3 w-3" />
+          <RotateCcw className="h-3.5 w-3.5" />
         </Button>
       </div>
 
       <div className="flex items-center gap-4 mb-4">
         <div className="relative flex-1">
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+          <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ease-out ${
-                isComplete ? "bg-primary glow-emerald" : "bg-primary/70"
-              }`}
+              className="h-full rounded-full transition-all duration-500 ease-out gradient-energy"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
         <div className={`text-right min-w-[80px] transition-transform ${isAnimating ? "animate-counter" : ""}`}>
-          <span className={`text-2xl font-bold ${isComplete ? "text-primary" : "text-foreground"}`}>
+          <span className={`text-2xl font-extrabold ${isComplete ? "text-sport" : "text-foreground"}`}>
             {value}
           </span>
           <span className="text-sm text-muted-foreground">/{goal}</span>
