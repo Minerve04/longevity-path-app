@@ -42,6 +42,8 @@ import { loadGoals, Goals } from "@/lib/goals";
 import { saveDayEntry, getCurrentStreak, getEntry } from "@/lib/history";
 import { celebrate } from "@/lib/celebrate";
 import { StreakBadge } from "@/components/StreakBadge";
+import { GoalsEditor } from "@/components/GoalsEditor";
+import { haptic } from "@/lib/haptics";
 
 interface CustomItem {
   id: string;
