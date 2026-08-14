@@ -423,6 +423,7 @@ const Dashboard = () => {
       total: totalTasks,
       validated: dayValidated,
     });
+    setStreak(getCurrentStreak());
   }, [dayProgress, doneTasks, totalTasks, dayValidated]);
 
   // Célébration lorsqu'une section atteint 100 %

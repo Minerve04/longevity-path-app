@@ -61,15 +61,22 @@ const shiftDay = (date: Date, delta: number): Date => {
   return d;
 };
 
-/** Jours consécutifs validés (aujourd'hui ou hier comme point de départ). */
+/** Seuil de % à partir duquel une journée compte dans la série. */
+export const STREAK_THRESHOLD = 50;
+
+/** Une journée compte si elle est validée OU accomplie à >= 50 %. */
+export const countsForStreak = (entry?: HistoryEntry | null): boolean =>
+  !!entry && (entry.validated || entry.progress >= STREAK_THRESHOLD);
+
+/** Jours consécutifs accomplis (aujourd'hui ou hier comme point de départ). */
 export const getCurrentStreak = (history: History = loadHistory()): number => {
   let streak = 0;
   let cursor = new Date();
-  if (!history[toDateKey(cursor)]?.validated) {
+  if (!countsForStreak(history[toDateKey(cursor)])) {
     cursor = shiftDay(cursor, -1);
-    if (!history[toDateKey(cursor)]?.validated) return 0;
+    if (!countsForStreak(history[toDateKey(cursor)])) return 0;
   }
-  while (history[toDateKey(cursor)]?.validated) {
+  while (countsForStreak(history[toDateKey(cursor)])) {
     streak++;
     cursor = shiftDay(cursor, -1);
   }
@@ -79,7 +86,7 @@ export const getCurrentStreak = (history: History = loadHistory()): number => {
 /** Meilleure série jamais réalisée. */
 export const getBestStreak = (history: History = loadHistory()): number => {
   const dates = Object.values(history)
-    .filter((e) => e.validated)
+    .filter((e) => countsForStreak(e))
     .map((e) => e.date)
     .sort();
   let best = 0;

@@ -16,6 +16,10 @@ export const PersonalRecords = () => {
         <h3 className="text-base font-extrabold text-foreground">Records personnels</h3>
       </div>
 
+      <p className="text-[11px] font-semibold text-muted-foreground">
+        Une journée compte dans la série dès {STREAK_THRESHOLD} % d'accomplissement.
+      </p>
+
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-2xl bg-secondary p-3 text-center">
           <Flame className="h-5 w-5 text-sport mx-auto mb-1" />
@@ -33,6 +37,7 @@ export const PersonalRecords = () => {
           <p className="text-[10px] font-semibold text-muted-foreground">Journées validées</p>
         </div>
       </div>
+
 
       <BadgesRow streak={Math.max(currentStreak, bestStreak)} />
     </div>
