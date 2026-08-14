@@ -379,7 +379,21 @@ const Dashboard = () => {
     cureTasks.filter((t) => cureChecked[t.id]).length;
   const dayProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
+  // Lueur douce sur la jauge quand le % progresse
+  const prevProgressRef = useRef(dayProgress);
+  useEffect(() => {
+    if (dayProgress > prevProgressRef.current) {
+      setGaugeGlow(true);
+      const t = setTimeout(() => setGaugeGlow(false), 950);
+      prevProgressRef.current = dayProgress;
+      return () => clearTimeout(t);
+    }
+    prevProgressRef.current = dayProgress;
+  }, [dayProgress]);
+
   const handleValidateDay = () => {
+    haptic("success");
+
     saveDayEntry({
       progress: dayProgress,
       done: doneTasks,
