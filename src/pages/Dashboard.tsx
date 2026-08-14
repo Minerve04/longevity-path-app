@@ -97,6 +97,12 @@ const Dashboard = () => {
   const [dayValidated, setDayValidated] = useState(false);
   const [streak, setStreak] = useState(0);
 
+  // Accès rapide aux objectifs
+  const [goalsEditorOpen, setGoalsEditorOpen] = useState(false);
+
+  // Lueur de la jauge lorsque le % progresse
+  const [gaugeGlow, setGaugeGlow] = useState(false);
+
   useEffect(() => {
     setDayValidated(getEntry(new Date())?.validated ?? false);
     setStreak(getCurrentStreak());
