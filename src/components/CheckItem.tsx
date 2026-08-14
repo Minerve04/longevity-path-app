@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { Check, LucideIcon, CircleDot } from "lucide-react";
+import { haptic } from "@/lib/haptics";
 
 export type CheckVariant = "sport" | "supplement" | "cure";
 
