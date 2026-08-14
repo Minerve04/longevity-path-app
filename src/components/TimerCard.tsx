@@ -12,7 +12,7 @@ interface TimerCardProps {
 export const TimerCard = ({ label, duration, isComplete, onComplete }: TimerCardProps) => {
   const [timeLeft, setTimeLeft] = useState(duration);
   const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const progress = ((duration - timeLeft) / duration) * 100;
 
