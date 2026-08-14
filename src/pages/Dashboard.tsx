@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
-import { Dumbbell, Salad, Sparkles } from "lucide-react";
+import {
+  Dumbbell,
+  Salad,
+  Sparkles,
+  Footprints,
+  Fish,
+  Droplets,
+  Pill,
+  CupSoda,
+  Leaf,
+  Check,
+  PartyPopper,
+} from "lucide-react";
 import {
   DndContext,
   closestCenter,
