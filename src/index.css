@@ -178,3 +178,26 @@
     100% { transform: scale(1); }
   }
 }
+
+@layer utilities {
+  .animate-pop {
+    animation: pop-spring 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes pop-spring {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.045); }
+    65% { transform: scale(0.985); }
+    100% { transform: scale(1); }
+  }
+
+  .animate-gauge-glow {
+    animation: gauge-glow 0.9s ease-out;
+  }
+
+  @keyframes gauge-glow {
+    0% { filter: brightness(1); box-shadow: 0 0 0 hsl(var(--primary) / 0); }
+    40% { filter: brightness(1.18); box-shadow: 0 0 14px hsl(var(--primary) / 0.55); }
+    100% { filter: brightness(1); box-shadow: 0 0 0 hsl(var(--primary) / 0); }
+  }
+}
