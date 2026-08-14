@@ -1,5 +1,5 @@
 import { Trophy, Flame, CheckCircle2 } from "lucide-react";
-import { getBestStreak, getCurrentStreak, getTotalValidatedDays } from "@/lib/history";
+import { getBestStreak, getCurrentStreak, getTotalValidatedDays, STREAK_THRESHOLD } from "@/lib/history";
 import { BadgesRow } from "@/components/BadgesRow";
 
 export const PersonalRecords = () => {
