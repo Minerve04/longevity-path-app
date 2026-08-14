@@ -88,6 +88,17 @@ const Dashboard = () => {
   // Goals
   const [goals, setGoals] = useState<Goals>(loadGoals);
 
+  // Validation de la journée
+  const [dayValidated, setDayValidated] = useState(false);
+
+  const handleValidateDay = () => {
+    setDayValidated(true);
+    toast.success("Bravo ! Journée validée", {
+      description: "Continue comme ça, ton énergie grimpe.",
+    });
+  };
+
+
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
