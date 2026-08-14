@@ -12,6 +12,7 @@ import {
   Leaf,
   Check,
   PartyPopper,
+  Target,
 } from "lucide-react";
 import {
   DndContext,
