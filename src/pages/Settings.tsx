@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Bell, Moon, Trash2, Info, Target } from "lucide-react";
+import { Trash2, Info, Target } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { ReminderManager } from "@/components/ReminderManager";
+import { RoutineCard } from "@/components/RoutineCard";
 import { GoalsEditor } from "@/components/GoalsEditor";
 import { loadGoals } from "@/lib/goals";
 
@@ -58,37 +58,9 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Notifications */}
-        <div className="glass-card rounded-2xl p-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Bell className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-foreground">Notifications</h3>
-                <p className="text-xs text-muted-foreground">Rappels quotidiens</p>
-              </div>
-            </div>
-            <Switch defaultChecked />
-          </div>
-        </div>
+        {/* Routine type */}
+        <RoutineCard />
 
-        {/* Dark Mode */}
-        <div className="glass-card rounded-2xl p-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Moon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-foreground">Mode sombre</h3>
-                <p className="text-xs text-muted-foreground">Toujours activé</p>
-              </div>
-            </div>
-            <Switch defaultChecked disabled />
-          </div>
-        </div>
 
         {/* Clear Data */}
         <div className="glass-card rounded-2xl p-4 animate-slide-up" style={{ animationDelay: "0.3s" }}>

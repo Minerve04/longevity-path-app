@@ -12,6 +12,7 @@ import {
   Leaf,
   Check,
   PartyPopper,
+  Target,
 } from "lucide-react";
 import {
   DndContext,
@@ -41,6 +42,8 @@ import { loadGoals, Goals } from "@/lib/goals";
 import { saveDayEntry, getCurrentStreak, getEntry } from "@/lib/history";
 import { celebrate } from "@/lib/celebrate";
 import { StreakBadge } from "@/components/StreakBadge";
+import { GoalsEditor } from "@/components/GoalsEditor";
+import { haptic } from "@/lib/haptics";
 
 interface CustomItem {
   id: string;
@@ -96,6 +99,12 @@ const Dashboard = () => {
   // Validation de la journée + série
   const [dayValidated, setDayValidated] = useState(false);
   const [streak, setStreak] = useState(0);
+
+  // Accès rapide aux objectifs
+  const [goalsEditorOpen, setGoalsEditorOpen] = useState(false);
+
+  // Lueur de la jauge lorsque le % progresse
+  const [gaugeGlow, setGaugeGlow] = useState(false);
 
   useEffect(() => {
     setDayValidated(getEntry(new Date())?.validated ?? false);
@@ -372,7 +381,21 @@ const Dashboard = () => {
     cureTasks.filter((t) => cureChecked[t.id]).length;
   const dayProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
+  // Lueur douce sur la jauge quand le % progresse
+  const prevProgressRef = useRef(dayProgress);
+  useEffect(() => {
+    if (dayProgress > prevProgressRef.current) {
+      setGaugeGlow(true);
+      const t = setTimeout(() => setGaugeGlow(false), 950);
+      prevProgressRef.current = dayProgress;
+      return () => clearTimeout(t);
+    }
+    prevProgressRef.current = dayProgress;
+  }, [dayProgress]);
+
   const handleValidateDay = () => {
+    haptic("success");
+
     saveDayEntry({
       progress: dayProgress,
       done: doneTasks,
@@ -461,19 +484,31 @@ const Dashboard = () => {
                 })}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <StreakBadge streak={streak} />
-              <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setGoalsEditorOpen(true)}
+                aria-label="Régler mes objectifs"
+                className="h-9 w-9 rounded-xl bg-secondary flex items-center justify-center text-primary transition-transform active:scale-95 hover:shadow-soft"
+              >
+                <Target className="h-4.5 w-4.5" strokeWidth={2.4} />
+              </button>
+              <div className="flex flex-col items-end gap-1">
+                <StreakBadge streak={streak} />
+                <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+              </div>
             </div>
           </div>
 
           {/* Jauge d'énergie du jour */}
           <div className="mt-3 h-4 rounded-full bg-secondary overflow-hidden">
             <div
-              className="h-full rounded-full gradient-energy transition-all duration-700 ease-out"
+              className={`h-full rounded-full gradient-energy transition-all duration-700 ease-out ${
+                gaugeGlow ? "animate-gauge-glow" : ""
+              }`}
               style={{ width: `${Math.max(dayProgress, 3)}%` }}
             />
           </div>
+
           <p className="mt-1.5 text-[11px] font-semibold text-muted-foreground">
             {doneTasks}/{totalTasks} actions accomplies aujourd'hui
           </p>
@@ -710,6 +745,14 @@ const Dashboard = () => {
           onSave={handleEditSave}
         />
       )}
+
+      {/* Réglage rapide des objectifs */}
+      <GoalsEditor
+        open={goalsEditorOpen}
+        onOpenChange={setGoalsEditorOpen}
+        onSave={() => setGoals(loadGoals())}
+      />
+
     </div>
   );
 };
