@@ -419,10 +419,14 @@ const Dashboard = () => {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Dumbbell className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Sport</h2>
+              <span className="h-8 w-8 rounded-xl bg-sport-soft flex items-center justify-center">
+                <Dumbbell className="h-4 w-4 text-sport" />
+              </span>
+              <h2 className="text-base font-extrabold text-foreground">Sport</h2>
             </div>
-            <span className="text-xs text-muted-foreground">{sportProgress()}% complété</span>
+            <span className="text-xs font-bold text-sport bg-sport-soft rounded-full px-2.5 py-1">
+              {sportProgress()}%
+            </span>
           </div>
 
           <Counter
@@ -441,7 +445,13 @@ const Dashboard = () => {
             increments={[20, 50]}
           />
 
-          <CheckItem label="Footing" checked={footing} onToggle={() => setFooting(!footing)} />
+          <CheckItem
+            label="Footing"
+            checked={footing}
+            onToggle={() => setFooting(!footing)}
+            variant="sport"
+            icon={Footprints}
+          />
 
           <TimerCard
             label="Vélo"
@@ -459,7 +469,7 @@ const Dashboard = () => {
               items={customExercises.map((e) => e.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {customExercises.map((exercise) => (
                   <SortableItem
                     key={exercise.id}
@@ -469,6 +479,8 @@ const Dashboard = () => {
                     onToggle={() => toggleCustomExercise(exercise.id)}
                     onEdit={() => openEditModal(exercise.id, exercise.label, "exercise")}
                     onRemove={() => removeCustomExercise(exercise.id)}
+                    variant="sport"
+                    icon={Dumbbell}
                   />
                 ))}
               </div>
@@ -482,31 +494,43 @@ const Dashboard = () => {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Salad className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Nutrition & Suppléments</h2>
+              <span className="h-8 w-8 rounded-xl bg-supplement-soft flex items-center justify-center">
+                <Salad className="h-4 w-4 text-supplement" />
+              </span>
+              <h2 className="text-base font-extrabold text-foreground">Nutrition & Suppléments</h2>
             </div>
-            <span className="text-xs text-muted-foreground">{nutritionProgress()}% complété</span>
+            <span className="text-xs font-bold text-supplement bg-supplement-soft rounded-full px-2.5 py-1">
+              {nutritionProgress()}%
+            </span>
           </div>
 
           <CheckItem
             label="Huile de foie de morue"
             checked={supplements.codLiverOil}
             onToggle={() => toggleSupplement("codLiverOil")}
+            variant="supplement"
+            icon={Fish}
           />
           <CheckItem
             label="Huile de courge"
             checked={supplements.pumpkinOil}
             onToggle={() => toggleSupplement("pumpkinOil")}
+            variant="supplement"
+            icon={Droplets}
           />
           <CheckItem
             label="Gélule d'ail"
             checked={supplements.garlicCapsule}
             onToggle={() => toggleSupplement("garlicCapsule")}
+            variant="supplement"
+            icon={Pill}
           />
           <CheckItem
             label="Tisane antioxydante"
             checked={supplements.antioxidantTea}
             onToggle={() => toggleSupplement("antioxidantTea")}
+            variant="supplement"
+            icon={CupSoda}
           />
 
           <DndContext
@@ -518,7 +542,7 @@ const Dashboard = () => {
               items={customSupplements.map((s) => s.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {customSupplements.map((supplement) => (
                   <SortableItem
                     key={supplement.id}
@@ -528,6 +552,8 @@ const Dashboard = () => {
                     onToggle={() => toggleCustomSupplement(supplement.id)}
                     onEdit={() => openEditModal(supplement.id, supplement.label, "supplement")}
                     onRemove={() => removeCustomSupplement(supplement.id)}
+                    variant="supplement"
+                    icon={Leaf}
                   />
                 ))}
               </div>
@@ -537,6 +563,35 @@ const Dashboard = () => {
           <AddItemModal onAdd={addCustomSupplement} type="supplement" />
         </section>
       </main>
+
+      {/* CTA : Valider ma journée */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 px-4 pb-3 pt-4 bg-gradient-to-t from-background via-background to-transparent">
+        <div className="max-w-md mx-auto">
+          <button
+            onClick={handleValidateDay}
+            disabled={dayProgress === 0}
+            className={`w-full h-14 rounded-2xl text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] ${
+              dayProgress === 0
+                ? "bg-muted text-muted-foreground"
+                : dayValidated
+                ? "bg-success text-white shadow-float"
+                : "gradient-cta text-white"
+            }`}
+          >
+            {dayValidated ? (
+              <>
+                <PartyPopper className="h-5 w-5" />
+                Journée validée !
+              </>
+            ) : (
+              <>
+                <Check className="h-5 w-5" strokeWidth={3} />
+                Valider ma journée
+              </>
+            )}
+          </button>
+        </div>
+      </div>
 
       <BottomNav />
 
