@@ -745,6 +745,14 @@ const Dashboard = () => {
           onSave={handleEditSave}
         />
       )}
+
+      {/* Réglage rapide des objectifs */}
+      <GoalsEditor
+        open={goalsEditorOpen}
+        onOpenChange={setGoalsEditorOpen}
+        onSave={() => setGoals(loadGoals())}
+      />
+
     </div>
   );
 };
