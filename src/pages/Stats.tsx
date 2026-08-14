@@ -3,6 +3,9 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts
 import { Flame, Target, TrendingUp, Pill, Dumbbell, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomNav } from "@/components/BottomNav";
+import { MonthHeatmap } from "@/components/MonthHeatmap";
+import { WeeklyTrend } from "@/components/WeeklyTrend";
+import { PersonalRecords } from "@/components/PersonalRecords";
 
 type Period = "week" | "month" | "year";
 
@@ -362,6 +365,10 @@ const Stats = () => {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        <PersonalRecords />
+        <MonthHeatmap />
+        <WeeklyTrend />
 
         <div className="grid grid-cols-2 gap-4">
           <div className="glass-card p-4 text-center">
