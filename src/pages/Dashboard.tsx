@@ -395,16 +395,20 @@ const Dashboard = () => {
         {cureTasks.length > 0 && (
           <section className="space-y-3 animate-slide-up">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Tâches Cure</h2>
+              <span className="h-8 w-8 rounded-xl bg-cure-soft flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-cure" />
+              </span>
+              <h2 className="text-base font-extrabold text-foreground">Tâches Cure</h2>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {cureTasks.map((task) => (
                 <CheckItem
                   key={task.id}
                   label={task.label}
                   checked={cureChecked[task.id] || false}
                   onToggle={() => toggleCureTask(task.id)}
+                  variant="cure"
+                  icon={Sparkles}
                 />
               ))}
             </div>
