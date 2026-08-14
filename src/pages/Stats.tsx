@@ -12,6 +12,7 @@ type Period = "week" | "month" | "year";
 interface DayData {
   pushups: number;
   abs: number;
+  squats: number;
   footing?: boolean;
   bikeComplete?: boolean;
   customExercises?: { id: string; label: string; checked: boolean }[];
@@ -91,6 +92,7 @@ const Stats = () => {
     const dates = getDateRange(period);
     let totalPushups = 0;
     let totalAbs = 0;
+    let totalSquats = 0;
     let completedDays = 0;
     let currentStreak = 0;
     let tempStreak = 0;
@@ -113,8 +115,9 @@ const Stats = () => {
       if (dayData) {
         totalPushups += dayData.pushups || 0;
         totalAbs += dayData.abs || 0;
+        totalSquats += dayData.squats || 0;
         
-        const hasActivity = (dayData.pushups || 0) > 0 || (dayData.abs || 0) > 0;
+        const hasActivity = (dayData.pushups || 0) > 0 || (dayData.abs || 0) > 0 || (dayData.squats || 0) > 0;
         if (hasActivity) {
           completedDays++;
           tempStreak++;
@@ -268,6 +271,7 @@ const Stats = () => {
     return {
       totalPushups,
       totalAbs,
+      totalSquats,
       streak: currentStreak,
       avgCompletion: Math.round((completedDays / totalDays) * 100),
       totalDays,
@@ -293,37 +297,37 @@ const Stats = () => {
           name: dayLabels[date.getDay() === 0 ? 6 : date.getDay() - 1],
           pushups: dayData?.pushups || 0,
           abs: dayData?.abs || 0,
+          squats: dayData?.squats || 0,
         };
       });
     } else if (period === "month") {
-      const weeks: { pushups: number; abs: number }[] = [
-        { pushups: 0, abs: 0 },
-        { pushups: 0, abs: 0 },
-        { pushups: 0, abs: 0 },
-        { pushups: 0, abs: 0 },
-        { pushups: 0, abs: 0 },
-      ];
+      const weeks: { pushups: number; abs: number; squats: number }[] = Array(5)
+        .fill(null)
+        .map(() => ({ pushups: 0, abs: 0, squats: 0 }));
       dates.forEach((date, i) => {
         const weekIndex = Math.floor(i / 7);
         const dayData = getDayData(date);
         if (dayData && weekIndex < 5) {
           weeks[weekIndex].pushups += dayData.pushups || 0;
           weeks[weekIndex].abs += dayData.abs || 0;
+          weeks[weekIndex].squats += dayData.squats || 0;
         }
       });
       return weeks.slice(0, 4).map((w, i) => ({
         name: `Sem ${i + 1}`,
         pushups: w.pushups,
         abs: w.abs,
+        squats: w.squats,
       }));
     } else {
-      const months: { pushups: number; abs: number }[] = Array(12).fill(null).map(() => ({ pushups: 0, abs: 0 }));
+      const months: { pushups: number; abs: number; squats: number }[] = Array(12).fill(null).map(() => ({ pushups: 0, abs: 0, squats: 0 }));
       dates.forEach(date => {
         const monthIndex = date.getMonth();
         const dayData = getDayData(date);
         if (dayData) {
           months[monthIndex].pushups += dayData.pushups || 0;
           months[monthIndex].abs += dayData.abs || 0;
+          months[monthIndex].squats += dayData.squats || 0;
         }
       });
       const monthLabels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
@@ -331,6 +335,7 @@ const Stats = () => {
         name: monthLabels[i],
         pushups: m.pushups,
         abs: m.abs,
+        squats: m.squats,
       }));
     }
   }, [period]);
@@ -430,6 +435,31 @@ const Stats = () => {
           <div className="flex justify-between text-xs font-semibold text-muted-foreground mt-2">
             <span>Objectif: {30 * goalMultiplier}</span>
             <span>Total: {stats.totalAbs}</span>
+          </div>
+        </div>
+
+        {/* Squats Chart */}
+        <div className="card-float p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-extrabold text-foreground">🦵 Squats</h3>
+            <span className="text-sm font-bold text-primary">{periodLabel}</span>
+          </div>
+          <div className="h-32">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(215 16% 47%)', fontSize: 10 }} />
+                <YAxis hide />
+                <Bar dataKey="squats" radius={[4, 4, 0, 0]}>
+                  {chartData.map((_, index) => (
+                    <Cell key={index} fill="#0ea5e9" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground mt-2">
+            <span>Objectif: {100 * goalMultiplier}</span>
+            <span>Total: {stats.totalSquats}</span>
           </div>
         </div>
 
