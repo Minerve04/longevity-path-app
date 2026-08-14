@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Bell, Moon, Trash2, Info, Target } from "lucide-react";
+import { Trash2, Info, Target } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { ReminderManager } from "@/components/ReminderManager";
+import { RoutineCard } from "@/components/RoutineCard";
 import { GoalsEditor } from "@/components/GoalsEditor";
 import { loadGoals } from "@/lib/goals";
 
