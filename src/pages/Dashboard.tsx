@@ -328,8 +328,21 @@ const Dashboard = () => {
     return Math.round(((supplementsComplete + customComplete) / total) * 100);
   };
 
+  const totalTasks =
+    4 + customExercises.length + 4 + customSupplements.length + cureTasks.length;
+  const doneTasks =
+    (pushups >= goals.pushups ? 1 : 0) +
+    (abs >= goals.abs ? 1 : 0) +
+    (footing ? 1 : 0) +
+    (bikeComplete ? 1 : 0) +
+    customExercises.filter((e) => exerciseChecked[e.id]).length +
+    Object.values(supplements).filter(Boolean).length +
+    customSupplements.filter((s) => supplementChecked[s.id]).length +
+    cureTasks.filter((t) => cureChecked[t.id]).length;
+  const dayProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-44">
       <NotificationBanner
         supplements={supplements}
         sportCompleted={{
@@ -341,15 +354,31 @@ const Dashboard = () => {
       />
 
       {/* Header */}
-      <header className="sticky top-0 z-30 glass-card border-b border-border/50 px-4 py-4">
+      <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-xl border-b border-border px-4 pt-4 pb-4 shadow-soft">
         <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gradient-emerald">Hero</h1>
-          <p className="text-xs text-muted-foreground">
-            {new Date().toLocaleDateString("fr-FR", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-2xl font-extrabold text-gradient-emerald">Hero</h1>
+              <p className="text-xs font-semibold text-muted-foreground capitalize">
+                {new Date().toLocaleDateString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })}
+              </p>
+            </div>
+            <span className="text-2xl font-extrabold text-foreground">{dayProgress}%</span>
+          </div>
+
+          {/* Jauge d'énergie du jour */}
+          <div className="mt-3 h-4 rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full gradient-energy transition-all duration-700 ease-out"
+              style={{ width: `${Math.max(dayProgress, 3)}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] font-semibold text-muted-foreground">
+            {doneTasks}/{totalTasks} actions accomplies aujourd'hui
           </p>
         </div>
       </header>
