@@ -50,14 +50,33 @@ export const CheckItem = ({
   icon: Icon = CircleDot,
 }: CheckItemProps) => {
   const s = variantStyles[variant];
+  const [popping, setPopping] = useState(false);
+  const prevChecked = useRef(checked);
+
+  useEffect(() => {
+    if (checked && !prevChecked.current) {
+      setPopping(true);
+      const t = setTimeout(() => setPopping(false), 450);
+      prevChecked.current = checked;
+      return () => clearTimeout(t);
+    }
+    prevChecked.current = checked;
+  }, [checked]);
+
+  const handleClick = () => {
+    haptic(checked ? "light" : "medium");
+    onToggle();
+  };
 
   return (
     <button
-      onClick={onToggle}
+      onClick={handleClick}
       className={`w-full rounded-2xl p-4 flex items-center gap-4 border-2 shadow-soft text-left
-        transition-all duration-300 ease-out active:scale-[0.98] hover:shadow-float animate-slide-up
+        transition-all duration-300 ease-out active:scale-[0.98] hover:shadow-float
+        ${popping ? "animate-pop" : "animate-slide-up"}
         ${checked ? s.active : s.idle}`}
     >
+
       <div
         className={`h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors duration-300 ${
           checked ? "bg-card" : s.iconBg
