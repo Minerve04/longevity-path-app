@@ -4,12 +4,14 @@ const GOALS_KEY = "hero-goals";
 export interface Goals {
   pushups: number;
   abs: number;
+  squats: number;
   bikeDuration: number; // in minutes
 }
 
 export const DEFAULT_GOALS: Goals = {
   pushups: 200,
   abs: 100,
+  squats: 100,
   bikeDuration: 20,
 };
 
@@ -21,6 +23,7 @@ export const loadGoals = (): Goals => {
       return {
         pushups: parsed.pushups ?? DEFAULT_GOALS.pushups,
         abs: parsed.abs ?? DEFAULT_GOALS.abs,
+        squats: parsed.squats ?? DEFAULT_GOALS.squats,
         bikeDuration: parsed.bikeDuration ?? DEFAULT_GOALS.bikeDuration,
       };
     }

@@ -58,6 +58,7 @@ const Dashboard = () => {
   // Sport state
   const [pushups, setPushups] = useState(0);
   const [abs, setAbs] = useState(0);
+  const [squats, setSquats] = useState(0);
   const [footing, setFooting] = useState(false);
   const [bikeComplete, setBikeComplete] = useState(false);
   
@@ -156,6 +157,7 @@ const Dashboard = () => {
         const data = JSON.parse(saved);
         setPushups(data.pushups || 0);
         setAbs(data.abs || 0);
+        setSquats(data.squats || 0);
         setFooting(data.footing || false);
         setBikeComplete(data.bikeComplete || false);
         setSupplements(data.supplements || supplements);
@@ -196,6 +198,7 @@ const Dashboard = () => {
     const data = {
       pushups,
       abs,
+      squats,
       footing,
       bikeComplete,
       supplements,
@@ -215,7 +218,7 @@ const Dashboard = () => {
       cureChecked,
     };
     localStorage.setItem(getDailyKey(), JSON.stringify(data));
-  }, [pushups, abs, footing, bikeComplete, supplements, exerciseChecked, supplementChecked, customExercises, customSupplements, activeCure, cureTasks, cureChecked]);
+  }, [pushups, abs, squats, footing, bikeComplete, supplements, exerciseChecked, supplementChecked, customExercises, customSupplements, activeCure, cureTasks, cureChecked]);
 
   // Save persistent custom items
   useEffect(() => {
@@ -336,9 +339,10 @@ const Dashboard = () => {
   // Calculate progress
   const sportProgress = () => {
     let completed = 0;
-    let total = 4 + customExercises.length;
+    let total = 5 + customExercises.length;
     if (pushups >= goals.pushups) completed++;
     if (abs >= goals.abs) completed++;
+    if (squats >= goals.squats) completed++;
     if (footing) completed++;
     if (bikeComplete) completed++;
     completed += customExercises.filter((e) => exerciseChecked[e.id]).length;
@@ -353,10 +357,11 @@ const Dashboard = () => {
   };
 
   const totalTasks =
-    4 + customExercises.length + 4 + customSupplements.length + cureTasks.length;
+    5 + customExercises.length + 4 + customSupplements.length + cureTasks.length;
   const doneTasks =
     (pushups >= goals.pushups ? 1 : 0) +
     (abs >= goals.abs ? 1 : 0) +
+    (squats >= goals.squats ? 1 : 0) +
     (footing ? 1 : 0) +
     (bikeComplete ? 1 : 0) +
     customExercises.filter((e) => exerciseChecked[e.id]).length +
@@ -372,6 +377,7 @@ const Dashboard = () => {
         sportCompleted={{
           pushups: pushups >= goals.pushups,
           abs: abs >= goals.abs,
+          squats: squats >= goals.squats,
           footing: footing,
           bike: bikeComplete,
         }}
@@ -466,6 +472,14 @@ const Dashboard = () => {
             goal={goals.abs}
             value={abs}
             onChange={setAbs}
+            increments={[20, 50]}
+          />
+
+          <Counter
+            label="Squats"
+            goal={goals.squats}
+            value={squats}
+            onChange={setSquats}
             increments={[20, 50]}
           />
 
