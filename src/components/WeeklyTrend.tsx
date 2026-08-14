@@ -27,7 +27,7 @@ export const WeeklyTrend = () => {
           return (
             <div key={day.date} className="flex-1 flex flex-col items-center gap-1.5">
               <span className="text-[10px] font-bold text-muted-foreground">{day.progress}%</span>
-              <div className="w-full flex-1 flex items-end">
+              <div className="w-full h-20 flex items-end">
                 <div className="w-full h-full rounded-xl bg-secondary overflow-hidden flex items-end">
                   <div
                     className="w-full rounded-xl gradient-energy transition-all duration-700 ease-out"

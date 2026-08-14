@@ -7,8 +7,8 @@ const levelClass = (entry: HistoryEntry) => {
   if (entry.progress >= 100) return "bg-success text-white";
   if (entry.progress >= 75) return "bg-success/70 text-white";
   if (entry.progress >= 50) return "bg-accent/70 text-white";
-  if (entry.progress >= 25) return "bg-sport-soft text-sport";
-  if (entry.progress > 0) return "bg-secondary text-muted-foreground";
+  if (entry.progress >= 25) return "bg-accent/40 text-foreground";
+  if (entry.progress > 0) return "bg-sport-soft text-sport";
   return "bg-secondary/60 text-muted-foreground/60";
 };
 
