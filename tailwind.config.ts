@@ -50,9 +50,24 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        sport: {
+          DEFAULT: "hsl(var(--sport))",
+          soft: "hsl(var(--sport-soft))",
+        },
+        supplement: {
+          DEFAULT: "hsl(var(--supplement))",
+          soft: "hsl(var(--supplement-soft))",
+        },
+        cure: {
+          DEFAULT: "hsl(var(--cure))",
+          soft: "hsl(var(--cure-soft))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          soft: "hsl(var(--success-soft))",
+        },
         emerald: {
-          DEFAULT: "hsl(var(--emerald-glow))",
-          soft: "hsl(var(--emerald-soft))",
+          DEFAULT: "hsl(var(--primary))",
           50: "#ecfdf5",
           100: "#d1fae5",
           200: "#a7f3d0",
@@ -63,10 +78,6 @@ export default {
           700: "#047857",
           800: "#065f46",
           900: "#064e3b",
-        },
-        surface: {
-          glass: "hsl(var(--surface-glass))",
-          elevated: "hsl(var(--surface-elevated))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
