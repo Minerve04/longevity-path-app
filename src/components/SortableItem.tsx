@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
-import { CheckItem } from "@/components/CheckItem";
+import { GripVertical, Pencil, Trash2, LucideIcon } from "lucide-react";
+import { CheckItem, CheckVariant } from "@/components/CheckItem";
 import { Button } from "@/components/ui/button";
 
 interface SortableItemProps {
@@ -11,6 +11,8 @@ interface SortableItemProps {
   onToggle: () => void;
   onEdit: () => void;
   onRemove: () => void;
+  variant?: CheckVariant;
+  icon?: LucideIcon;
 }
 
 export const SortableItem = ({
@@ -20,6 +22,8 @@ export const SortableItem = ({
   onToggle,
   onEdit,
   onRemove,
+  variant,
+  icon,
 }: SortableItemProps) => {
   const {
     attributes,
@@ -50,7 +54,13 @@ export const SortableItem = ({
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <CheckItem label={label} checked={checked} onToggle={onToggle} />
+        <CheckItem
+          label={label}
+          checked={checked}
+          onToggle={onToggle}
+          variant={variant}
+          icon={icon}
+        />
       </div>
       <Button
         variant="ghost"
